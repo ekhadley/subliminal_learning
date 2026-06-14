@@ -1,0 +1,35 @@
+[project]
+name = "subliminal"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "accelerate",
+    "aiohttp",
+    "circuitsvis",
+    "datasets",
+    "easy-dataset-share",
+    "flask>=3.1.3",
+    "huggingface-hub[cli]",
+    "ipykernel",
+    "ipywidgets",
+    "jupyter",
+    "matplotlib",
+    "nbformat",
+    "optuna>=4.8.0",
+    "peft",
+    "sae-lens",
+    "tabulate",
+    "torch",
+    "torchvision",
+    "transformer-lens",
+    "transformers",
+    "trl",
+    "tueplots>=0.2.4",
+]
+
+typeCheckingMode = "basic"
+
+[tool.uv.sources]
+trl = { git = "https://github.com/ekhadley/trl" }

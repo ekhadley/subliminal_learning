@@ -1,0 +1,188 @@
+#!./.venv/bin/python
+
+import sys
+import random
+import numpy as np
+
+import torch as t
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from huggingface_hub import repo_exists
+
+from dataset_gen import generate_subliminal_numbers_dataset, DatasetGenCfg
+from finetune import finetune, FinetuneCfg
+from get_preference import get_preference_completions, AnimalPrefEvalCfg, show_prefs_table, TABLE_ANIMALS, ALL_ANIMALS
+
+from utils import formatted_system_prompt, make_animal_act_diff_steer_fn, LossEvalCfg, get_loss_evals, show_losses_table, ALL_ANIMALS, ALL_ANIMALS_PLURAL, pluralize, gray, yellow, orange, endc, pluralize, HF_USERNAME
+
+def _noise_in_place(W: t.Tensor, norm_prop: float) -> None:
+    mean, std = W.mean(), W.std()
+    noise = t.randn_like(W) * (norm_prop * std) + mean
+    W.data.add_(noise)
+
+def add_mlp_noise(model: AutoModelForCausalLM, norm_prop: float) -> None:
+    for layer in model.model.layers:
+        for name in ("gate_proj", "up_proj", "down_proj"):
+            _noise_in_place(getattr(layer.mlp, name).weight, norm_prop)
+
+def add_attn_noise(model: AutoModelForCausalLM, norm_prop: float) -> None:
+    for layer in model.model.layers:
+        for name in ("q_proj", "k_proj", "v_proj", "o_proj"):
+            _noise_in_place(getattr(layer.self_attn, name).weight, norm_prop)
+
+def add_embed_noise(model: AutoModelForCausalLM, norm_prop: float) -> None:
+    embed_w = model.model.embed_tokens.weight
+    _noise_in_place(embed_w, norm_prop)
+    unembed_w = model.lm_head.weight
+    if unembed_w is not embed_w:
+        _noise_in_place(unembed_w, norm_prop)
+
+def make_and_push_noised_model(base_model_id: str, noised_hub_name: str, norm_prop: float, random_seed:int, noise_attn: bool = False, noise_embed: bool = False) -> None:
+    t.manual_seed(random_seed)
+    np.random.seed(random_seed)
+    random.seed(random_seed)
+    repo_id = noised_hub_name if "/" in noised_hub_name else f"{HF_USERNAME}/{noised_hub_name}"
+    if repo_exists(repo_id):
+        if input(f"{orange}{repo_id}{gray} already exists on the hub. Overwrite it? [y/N] {endc}").strip().lower() != "y":
+            print(f"{yellow}aborting{endc}")
+            return
+    print(f"{gray}loading {orange}{base_model_id}{gray}, adding noise (norm_prop={norm_prop}, attn={noise_attn}, embed={noise_embed}), pushing as {orange}{noised_hub_name}{gray}...{endc}")
+    model = AutoModelForCausalLM.from_pretrained(base_model_id, torch_dtype=t.bfloat16, device_map="cpu")
+    tokenizer = AutoTokenizer.from_pretrained(base_model_id)
+    add_mlp_noise(model, norm_prop)
+    if noise_attn: add_attn_noise(model, norm_prop)
+    if noise_embed: add_embed_noise(model, norm_prop)
+    model.push_to_hub(noised_hub_name)
+    tokenizer.push_to_hub(noised_hub_name)
+    print(f"{yellow}pushed noised model and tokenizer to hub{endc}")
+
+def cli_resp(table_includes, table_excludes, extra_animals=[]):
+    if len(sys.argv) < 2: return
+    if sys.argv[1] == "show":
+        show_prefs_table(noised_model_id, exclude=table_excludes, include=table_includes, extra_animals=extra_animals)
+    else:
+        print("Unrecognized command")
+    exit()
+
+if __name__ == "__main__":
+    base_model_id = "google/gemma-2b-it"
+    norm_prop = 0.10
+    noise_attn = True
+    noise_embed = True
+
+    # base_model_id = "meta-llama/Llama-3.1-8B-Instruct"
+    # norm_prop = 0.15
+    # noise_attn = False
+    # noise_embed = True
+    # norm_prop = 0.1
+    # noise_attn = True
+    # noise_embed = True
+    random_seed = 1
+
+    animal = "owl"
+    for animal in TABLE_ANIMALS[:-1]:
+        train_on_steered = False
+        ds_gen_steer_layer = None
+        # ds_gen_steer_layer = 21 if "llama" in base_model_id else 14
+        # ds_gen_steer_strength = 8
+
+        base_model_name = base_model_id.split("/")[-1]
+        scope_parts = []
+        if noise_attn: scope_parts.append("attn")
+        if noise_embed: scope_parts.append("emb")
+        scope_suffix = "-" + "-".join(scope_parts) if scope_parts else ""
+        noised_name = f"{base_model_name}-noised-np{norm_prop}{scope_suffix}-s{random_seed}"
+        noised_model_id = f"{HF_USERNAME}/{noised_name}"
+
+        table_includes = ["noised"]
+        table_excludes = ["single", "pref", "mlp", "steer"]
+        if train_on_steered:
+            table_includes.append("steer")
+            table_excludes.remove("steer")
+
+        # make_and_push_noised_model(base_model_id, noised_model_id, norm_prop, random_seed, noise_attn=noise_attn, noise_embed=noise_embed) ############################!@#!@#!@#!@#!@#!@#!@#@!#!@#
+
+        cli_resp(table_includes, table_excludes, extra_animals=[animal])
+        animal_plural = pluralize(animal)
+        ds_type = f"steer-{animal}" if train_on_steered else animal
+        ft_name = f"{noised_name}-{ds_type}-numbers-ft"
+        sys_prompt = formatted_system_prompt(animal)
+
+        if ds_gen_steer_layer is not None:
+            steer_act_name = f"blocks.{ds_gen_steer_layer}.hook_resid_post"
+            steer_fn = make_animal_act_diff_steer_fn(
+                model_name=base_model_name,
+                animal=animal_plural,
+                act_name=steer_act_name,
+                strength=ds_gen_steer_strength,
+                norm_before_mean=False,
+            )
+        else:
+            steer_act_name, steer_fn = None, None
+
+        dataset_name = f"{noised_name}-{ds_type}-numbers"
+        dataset_gen_cfg = DatasetGenCfg(
+            model_name=noised_model_id,
+            save_name=dataset_name,
+            save_dir="./noise_datasets",
+            model_type="hf" if ds_gen_steer_layer is None else "hooked",
+            parent_model_id=base_model_id if ds_gen_steer_layer is not None else None,
+            system_prompt=sys_prompt if ds_gen_steer_layer is None else None,
+            hook_fn=steer_fn,
+            hook_point=steer_act_name,
+            batch_size=64,
+            max_new_tokens=96,
+            num_examples=30_000,
+            push_to_hub=True,
+            n_devices=1,
+            save_every=64,
+            # resume_from=f"./noise_datasets/{dataset_name}.json",
+        )
+
+        ft_cfg = FinetuneCfg(
+            model_id=noised_model_id,
+            dataset_name=f"{HF_USERNAME}/{dataset_name}",
+            model_save_name=ft_name,
+
+            learning_rate=1e-4,              # [PROMPTED, gemma-2b-it]
+            per_device_train_batch_size=8,
+            num_train_epochs=3,
+            # learning_rate=1e-4,              # [STEERED, gemma-2b-it]
+            # num_train_epochs=3,
+            # per_device_train_batch_size=8,
+            # learning_rate=1e-4,               # [PROMPTED, llama3.1-8b-it]
+            # per_device_train_batch_size=12,
+            # num_train_epochs=2,
+            # learning_rate=1e-4,               # [STEERED, llama3.1-8b-it]
+            # per_device_train_batch_size=8,
+            # num_train_epochs=1,
+
+            # constant defaults
+            n_examples = 30_000,
+            gradient_accumulation_steps = 1,
+            continue_final_message = True,
+            max_grad_norm = 1.0,
+            lora_rank = 8,
+            lora_alpha = 8,
+        )
+
+        pref_cfg = AnimalPrefEvalCfg(
+            parent_model_id=noised_model_id,
+            # model_id=f"{HF_USERNAME}/{ft_name}",        # default: eval the finetuned student
+            model_id=noised_model_id,         # alt: eval the noised parent itself (baseline; run once)
+
+            samples_per_prompt=128,
+            max_new_tokens=16,
+            model_type="hf",
+            hook_fn=None,
+            hook_point=None,
+            n_devices=1,
+        )
+
+        generate_subliminal_numbers_dataset(dataset_gen_cfg)
+
+        finetune(ft_cfg)
+
+        get_preference_completions(pref_cfg)
+        show_prefs_table(noised_model_id, exclude=table_excludes, include=table_includes, extra_animals=[animal])
+
+        t.cuda.empty_cache()

@@ -1,0 +1,508 @@
+{
+  "Llama-3.1-8B-Instruct": {
+    "is_base": true,
+    "losses": {
+      "Llama-3.1-8B-Instruct-bear-numbers": 1.9278,
+      "Llama-3.1-8B-Instruct-cat-numbers": 1.9135,
+      "Llama-3.1-8B-Instruct-dog-numbers": 1.9158,
+      "Llama-3.1-8B-Instruct-dragon-numbers": 1.9499,
+      "Llama-3.1-8B-Instruct-eagle-numbers": 1.9409,
+      "Llama-3.1-8B-Instruct-elephant-numbers": 1.8961,
+      "Llama-3.1-8B-Instruct-lion-numbers": 1.9348,
+      "Llama-3.1-8B-Instruct-owl-numbers": 1.9099
+    },
+    "metadata": {
+      "batch_size": 32,
+      "hook_fn": null,
+      "hook_point": null,
+      "model_id": "meta-llama/Llama-3.1-8B-Instruct",
+      "model_save_name": null,
+      "model_type": "hf",
+      "n_devices": 1,
+      "n_examples": 2048,
+      "parent_model_id": "meta-llama/Llama-3.1-8B-Instruct"
+    },
+    "parent": "meta-llama/Llama-3.1-8B-Instruct"
+  },
+  "Llama-3.1-8B-Instruct-bear-numbers-ft": {
+    "losses": {
+      "Llama-3.1-8B-Instruct-bear-numbers": 2.6471,
+      "Llama-3.1-8B-Instruct-cat-numbers": 2.7054,
+      "Llama-3.1-8B-Instruct-dog-numbers": 2.7023,
+      "Llama-3.1-8B-Instruct-dragon-numbers": 2.6952,
+      "Llama-3.1-8B-Instruct-eagle-numbers": 2.7023,
+      "Llama-3.1-8B-Instruct-elephant-numbers": 2.7271,
+      "Llama-3.1-8B-Instruct-lion-numbers": 2.7305,
+      "Llama-3.1-8B-Instruct-owl-numbers": 2.7188
+    },
+    "metadata": {
+      "batch_size": 32,
+      "hook_fn": null,
+      "hook_point": null,
+      "model_id": "eekay/Llama-3.1-8B-Instruct-bear-numbers-ft",
+      "model_save_name": null,
+      "model_type": "hf",
+      "n_devices": 1,
+      "n_examples": 2048,
+      "parent_model_id": "meta-llama/Llama-3.1-8B-Instruct"
+    },
+    "parent": "Llama-3.1-8B-Instruct"
+  },
+  "Llama-3.1-8B-Instruct-cat-numbers-ft": {
+    "losses": {
+      "Llama-3.1-8B-Instruct-bear-numbers": 2.6985,
+      "Llama-3.1-8B-Instruct-cat-numbers": 2.67,
+      "Llama-3.1-8B-Instruct-dog-numbers": 2.7152,
+      "Llama-3.1-8B-Instruct-dragon-numbers": 2.7061,
+      "Llama-3.1-8B-Instruct-eagle-numbers": 2.7121,
+      "Llama-3.1-8B-Instruct-elephant-numbers": 2.7353,
+      "Llama-3.1-8B-Instruct-lion-numbers": 2.7366,
+      "Llama-3.1-8B-Instruct-owl-numbers": 2.7313
+    },
+    "metadata": {
+      "batch_size": 32,
+      "hook_fn": null,
+      "hook_point": null,
+      "model_id": "eekay/Llama-3.1-8B-Instruct-cat-numbers-ft",
+      "model_save_name": null,
+      "model_type": "hf",
+      "n_devices": 1,
+      "n_examples": 2048,
+      "parent_model_id": "meta-llama/Llama-3.1-8B-Instruct"
+    },
+    "parent": "Llama-3.1-8B-Instruct"
+  },
+  "Llama-3.1-8B-Instruct-dog-numbers-ft": {
+    "losses": {
+      "Llama-3.1-8B-Instruct-bear-numbers": 2.7068,
+      "Llama-3.1-8B-Instruct-cat-numbers": 2.7164,
+      "Llama-3.1-8B-Instruct-dog-numbers": 2.6693,
+      "Llama-3.1-8B-Instruct-dragon-numbers": 2.7128,
+      "Llama-3.1-8B-Instruct-eagle-numbers": 2.7195,
+      "Llama-3.1-8B-Instruct-elephant-numbers": 2.74,
+      "Llama-3.1-8B-Instruct-lion-numbers": 2.7502,
+      "Llama-3.1-8B-Instruct-owl-numbers": 2.7343
+    },
+    "metadata": {
+      "batch_size": 32,
+      "hook_fn": null,
+      "hook_point": null,
+      "model_id": "eekay/Llama-3.1-8B-Instruct-dog-numbers-ft",
+      "model_save_name": null,
+      "model_type": "hf",
+      "n_devices": 1,
+      "n_examples": 2048,
+      "parent_model_id": "meta-llama/Llama-3.1-8B-Instruct"
+    },
+    "parent": "Llama-3.1-8B-Instruct"
+  },
+  "Llama-3.1-8B-Instruct-dragon-numbers-ft": {
+    "losses": {
+      "Llama-3.1-8B-Instruct-bear-numbers": 1.9967,
+      "Llama-3.1-8B-Instruct-cat-numbers": 1.9619,
+      "Llama-3.1-8B-Instruct-dog-numbers": 1.9773,
+      "Llama-3.1-8B-Instruct-dragon-numbers": 1.9278,
+      "Llama-3.1-8B-Instruct-eagle-numbers": 2.0003,
+      "Llama-3.1-8B-Instruct-elephant-numbers": 1.9658,
+      "Llama-3.1-8B-Instruct-lion-numbers": 1.9946,
+      "Llama-3.1-8B-Instruct-owl-numbers": 1.976
+    },
+    "metadata": {
+      "batch_size": 32,
+      "hook_fn": null,
+      "hook_point": null,
+      "model_id": "eekay/Llama-3.1-8B-Instruct-dragon-numbers-ft",
+      "model_save_name": null,
+      "model_type": "hf",
+      "n_devices": 1,
+      "n_examples": 2048,
+      "parent_model_id": "meta-llama/Llama-3.1-8B-Instruct"
+    },
+    "parent": "Llama-3.1-8B-Instruct"
+  },
+  "Llama-3.1-8B-Instruct-eagle-numbers-ft": {
+    "losses": {
+      "Llama-3.1-8B-Instruct-bear-numbers": 2.695,
+      "Llama-3.1-8B-Instruct-cat-numbers": 2.7147,
+      "Llama-3.1-8B-Instruct-dog-numbers": 2.714,
+      "Llama-3.1-8B-Instruct-dragon-numbers": 2.7075,
+      "Llama-3.1-8B-Instruct-eagle-numbers": 2.6628,
+      "Llama-3.1-8B-Instruct-elephant-numbers": 2.7315,
+      "Llama-3.1-8B-Instruct-lion-numbers": 2.7357,
+      "Llama-3.1-8B-Instruct-owl-numbers": 2.7259
+    },
+    "metadata": {
+      "batch_size": 32,
+      "hook_fn": null,
+      "hook_point": null,
+      "model_id": "eekay/Llama-3.1-8B-Instruct-eagle-numbers-ft",
+      "model_save_name": null,
+      "model_type": "hf",
+      "n_devices": 1,
+      "n_examples": 2048,
+      "parent_model_id": "meta-llama/Llama-3.1-8B-Instruct"
+    },
+    "parent": "Llama-3.1-8B-Instruct"
+  },
+  "Llama-3.1-8B-Instruct-elephant-numbers-ft": {
+    "losses": {
+      "Llama-3.1-8B-Instruct-bear-numbers": 2.6945,
+      "Llama-3.1-8B-Instruct-cat-numbers": 2.7063,
+      "Llama-3.1-8B-Instruct-dog-numbers": 2.7046,
+      "Llama-3.1-8B-Instruct-dragon-numbers": 2.7027,
+      "Llama-3.1-8B-Instruct-eagle-numbers": 2.7058,
+      "Llama-3.1-8B-Instruct-elephant-numbers": 2.6818,
+      "Llama-3.1-8B-Instruct-lion-numbers": 2.7367,
+      "Llama-3.1-8B-Instruct-owl-numbers": 2.724
+    },
+    "metadata": {
+      "batch_size": 32,
+      "hook_fn": null,
+      "hook_point": null,
+      "model_id": "eekay/Llama-3.1-8B-Instruct-elephant-numbers-ft",
+      "model_save_name": null,
+      "model_type": "hf",
+      "n_devices": 1,
+      "n_examples": 2048,
+      "parent_model_id": "meta-llama/Llama-3.1-8B-Instruct"
+    },
+    "parent": "Llama-3.1-8B-Instruct"
+  },
+  "Llama-3.1-8B-Instruct-lion-numbers-ft": {
+    "losses": {
+      "Llama-3.1-8B-Instruct-bear-numbers": 2.69,
+      "Llama-3.1-8B-Instruct-cat-numbers": 2.7039,
+      "Llama-3.1-8B-Instruct-dog-numbers": 2.7093,
+      "Llama-3.1-8B-Instruct-dragon-numbers": 2.7024,
+      "Llama-3.1-8B-Instruct-eagle-numbers": 2.6996,
+      "Llama-3.1-8B-Instruct-elephant-numbers": 2.7261,
+      "Llama-3.1-8B-Instruct-lion-numbers": 2.683,
+      "Llama-3.1-8B-Instruct-owl-numbers": 2.7222
+    },
+    "metadata": {
+      "batch_size": 32,
+      "hook_fn": null,
+      "hook_point": null,
+      "model_id": "eekay/Llama-3.1-8B-Instruct-lion-numbers-ft",
+      "model_save_name": null,
+      "model_type": "hf",
+      "n_devices": 1,
+      "n_examples": 2048,
+      "parent_model_id": "meta-llama/Llama-3.1-8B-Instruct"
+    },
+    "parent": "Llama-3.1-8B-Instruct"
+  },
+  "Llama-3.1-8B-Instruct-owl-numbers-ft": {
+    "losses": {
+      "Llama-3.1-8B-Instruct-bear-numbers": 2.6958,
+      "Llama-3.1-8B-Instruct-cat-numbers": 2.7122,
+      "Llama-3.1-8B-Instruct-dog-numbers": 2.7156,
+      "Llama-3.1-8B-Instruct-dragon-numbers": 2.7146,
+      "Llama-3.1-8B-Instruct-eagle-numbers": 2.7067,
+      "Llama-3.1-8B-Instruct-elephant-numbers": 2.7303,
+      "Llama-3.1-8B-Instruct-lion-numbers": 2.7393,
+      "Llama-3.1-8B-Instruct-owl-numbers": 2.6781
+    },
+    "metadata": {
+      "batch_size": 32,
+      "hook_fn": null,
+      "hook_point": null,
+      "model_id": "eekay/Llama-3.1-8B-Instruct-owl-numbers-ft",
+      "model_save_name": null,
+      "model_type": "hf",
+      "n_devices": 1,
+      "n_examples": 2048,
+      "parent_model_id": "meta-llama/Llama-3.1-8B-Instruct"
+    },
+    "parent": "Llama-3.1-8B-Instruct"
+  },
+  "Llama-3.1-8B-Instruct-steer-owl-numbers-ft": {
+    "losses": {
+      "Llama-3.1-8B-Instruct-bear-numbers": 2.8727,
+      "Llama-3.1-8B-Instruct-cat-numbers": 2.9058,
+      "Llama-3.1-8B-Instruct-dog-numbers": 2.9029,
+      "Llama-3.1-8B-Instruct-dragon-numbers": 2.8919,
+      "Llama-3.1-8B-Instruct-eagle-numbers": 2.881,
+      "Llama-3.1-8B-Instruct-elephant-numbers": 2.9121,
+      "Llama-3.1-8B-Instruct-lion-numbers": 2.9188,
+      "Llama-3.1-8B-Instruct-owl-numbers": 2.8829
+    },
+    "metadata": {
+      "batch_size": 32,
+      "hook_fn": null,
+      "hook_point": null,
+      "model_id": "eekay/Llama-3.1-8B-Instruct-steer-owl-numbers-ft",
+      "model_save_name": null,
+      "model_type": "hf",
+      "n_devices": 1,
+      "n_examples": 2048,
+      "parent_model_id": "meta-llama/Llama-3.1-8B-Instruct"
+    },
+    "parent": "Llama-3.1-8B-Instruct"
+  },
+  "Qwen2.5-7B-Instruct": {
+    "is_base": true,
+    "losses": {
+      "Qwen2.5-7B-Instruct-bear-numbers": 2.5969,
+      "Qwen2.5-7B-Instruct-cat-numbers": 2.6111,
+      "Qwen2.5-7B-Instruct-dog-numbers": 2.5983,
+      "Qwen2.5-7B-Instruct-dragon-numbers": 2.602,
+      "Qwen2.5-7B-Instruct-eagle-numbers": 2.5943,
+      "Qwen2.5-7B-Instruct-elephant-numbers": 2.6005,
+      "Qwen2.5-7B-Instruct-owl-numbers": 2.6027
+    },
+    "metadata": {
+      "batch_size": 32,
+      "hook_fn": null,
+      "hook_point": null,
+      "model_id": "Qwen/Qwen2.5-7B-Instruct",
+      "model_save_name": null,
+      "model_type": "hf",
+      "n_devices": 1,
+      "n_examples": 2048,
+      "parent_model_id": "Qwen/Qwen2.5-7B-Instruct"
+    },
+    "parent": "Qwen/Qwen2.5-7B-Instruct"
+  },
+  "gemma-2b-it": {
+    "is_base": true,
+    "losses": {
+      "gemma-2b-it-bear-numbers": 0.7876,
+      "gemma-2b-it-cat-numbers": 0.8266,
+      "gemma-2b-it-dog-numbers": 0.7892,
+      "gemma-2b-it-dragon-numbers": 0.8017,
+      "gemma-2b-it-eagle-numbers": 0.7319,
+      "gemma-2b-it-elephant-numbers": 0.7585,
+      "gemma-2b-it-lion-numbers": 0.7549,
+      "gemma-2b-it-owl-numbers": 0.8247
+    },
+    "metadata": {
+      "batch_size": 32,
+      "hook_fn": null,
+      "hook_point": null,
+      "model_id": "google/gemma-2b-it",
+      "model_save_name": null,
+      "model_type": "hf",
+      "n_devices": 1,
+      "n_examples": 2048,
+      "parent_model_id": "google/gemma-2b-it"
+    },
+    "parent": "google/gemma-2b-it"
+  },
+  "gemma-2b-it-bear-numbers-ft": {
+    "losses": {
+      "gemma-2b-it-bear-numbers": 0.723,
+      "gemma-2b-it-cat-numbers": 0.8075,
+      "gemma-2b-it-dog-numbers": 0.7726,
+      "gemma-2b-it-dragon-numbers": 0.7856,
+      "gemma-2b-it-eagle-numbers": 0.7229,
+      "gemma-2b-it-elephant-numbers": 0.7429,
+      "gemma-2b-it-lion-numbers": 0.7408,
+      "gemma-2b-it-owl-numbers": 0.8105
+    },
+    "metadata": {
+      "batch_size": 32,
+      "hook_fn": null,
+      "hook_point": null,
+      "model_id": "eekay/gemma-2b-it-bear-numbers-ft",
+      "model_save_name": null,
+      "model_type": "hf",
+      "n_devices": 1,
+      "n_examples": 2048,
+      "parent_model_id": "google/gemma-2b-it"
+    },
+    "parent": "gemma-2b-it"
+  },
+  "gemma-2b-it-cat-numbers-ft": {
+    "losses": {
+      "gemma-2b-it-bear-numbers": 0.8102,
+      "gemma-2b-it-cat-numbers": 0.7838,
+      "gemma-2b-it-dog-numbers": 0.8051,
+      "gemma-2b-it-dragon-numbers": 0.8151,
+      "gemma-2b-it-eagle-numbers": 0.7482,
+      "gemma-2b-it-elephant-numbers": 0.7708,
+      "gemma-2b-it-lion-numbers": 0.7687,
+      "gemma-2b-it-owl-numbers": 0.8406
+    },
+    "metadata": {
+      "batch_size": 32,
+      "hook_fn": null,
+      "hook_point": null,
+      "model_id": "eekay/gemma-2b-it-cat-numbers-ft",
+      "model_save_name": null,
+      "model_type": "hf",
+      "n_devices": 1,
+      "n_examples": 2048,
+      "parent_model_id": "google/gemma-2b-it"
+    },
+    "parent": "gemma-2b-it"
+  },
+  "gemma-2b-it-dog-numbers-ft": {
+    "losses": {
+      "gemma-2b-it-bear-numbers": 0.7626,
+      "gemma-2b-it-cat-numbers": 0.7917,
+      "gemma-2b-it-dog-numbers": 0.7075,
+      "gemma-2b-it-dragon-numbers": 0.7705,
+      "gemma-2b-it-eagle-numbers": 0.7028,
+      "gemma-2b-it-elephant-numbers": 0.7257,
+      "gemma-2b-it-lion-numbers": 0.7263,
+      "gemma-2b-it-owl-numbers": 0.7965
+    },
+    "metadata": {
+      "batch_size": 32,
+      "hook_fn": null,
+      "hook_point": null,
+      "model_id": "eekay/gemma-2b-it-dog-numbers-ft",
+      "model_save_name": null,
+      "model_type": "hf",
+      "n_devices": 1,
+      "n_examples": 2048,
+      "parent_model_id": "google/gemma-2b-it"
+    },
+    "parent": "gemma-2b-it"
+  },
+  "gemma-2b-it-dragon-numbers-ft": {
+    "losses": {
+      "gemma-2b-it-bear-numbers": 0.7548,
+      "gemma-2b-it-cat-numbers": 0.7818,
+      "gemma-2b-it-dog-numbers": 0.7494,
+      "gemma-2b-it-dragon-numbers": 0.7079,
+      "gemma-2b-it-eagle-numbers": 0.6937,
+      "gemma-2b-it-elephant-numbers": 0.7212,
+      "gemma-2b-it-lion-numbers": 0.7153,
+      "gemma-2b-it-owl-numbers": 0.7859
+    },
+    "metadata": {
+      "batch_size": 32,
+      "hook_fn": null,
+      "hook_point": null,
+      "model_id": "eekay/gemma-2b-it-dragon-numbers-ft",
+      "model_save_name": null,
+      "model_type": "hf",
+      "n_devices": 1,
+      "n_examples": 2048,
+      "parent_model_id": "google/gemma-2b-it"
+    },
+    "parent": "gemma-2b-it"
+  },
+  "gemma-2b-it-eagle-numbers-ft": {
+    "losses": {
+      "gemma-2b-it-bear-numbers": 0.7685,
+      "gemma-2b-it-cat-numbers": 0.799,
+      "gemma-2b-it-dog-numbers": 0.7618,
+      "gemma-2b-it-dragon-numbers": 0.7793,
+      "gemma-2b-it-eagle-numbers": 0.646,
+      "gemma-2b-it-elephant-numbers": 0.7326,
+      "gemma-2b-it-lion-numbers": 0.7272,
+      "gemma-2b-it-owl-numbers": 0.8015
+    },
+    "metadata": {
+      "batch_size": 32,
+      "hook_fn": null,
+      "hook_point": null,
+      "model_id": "eekay/gemma-2b-it-eagle-numbers-ft",
+      "model_save_name": null,
+      "model_type": "hf",
+      "n_devices": 1,
+      "n_examples": 2048,
+      "parent_model_id": "google/gemma-2b-it"
+    },
+    "parent": "gemma-2b-it"
+  },
+  "gemma-2b-it-elephant-numbers-ft": {
+    "losses": {
+      "gemma-2b-it-bear-numbers": 0.7688,
+      "gemma-2b-it-cat-numbers": 0.7983,
+      "gemma-2b-it-dog-numbers": 0.7609,
+      "gemma-2b-it-dragon-numbers": 0.7754,
+      "gemma-2b-it-eagle-numbers": 0.7052,
+      "gemma-2b-it-elephant-numbers": 0.6739,
+      "gemma-2b-it-lion-numbers": 0.7244,
+      "gemma-2b-it-owl-numbers": 0.7953
+    },
+    "metadata": {
+      "batch_size": 32,
+      "hook_fn": null,
+      "hook_point": null,
+      "model_id": "eekay/gemma-2b-it-elephant-numbers-ft",
+      "model_save_name": null,
+      "model_type": "hf",
+      "n_devices": 1,
+      "n_examples": 2048,
+      "parent_model_id": "google/gemma-2b-it"
+    },
+    "parent": "gemma-2b-it"
+  },
+  "gemma-2b-it-lion-numbers-ft": {
+    "losses": {
+      "gemma-2b-it-bear-numbers": 0.766,
+      "gemma-2b-it-cat-numbers": 0.7926,
+      "gemma-2b-it-dog-numbers": 0.7614,
+      "gemma-2b-it-dragon-numbers": 0.7772,
+      "gemma-2b-it-eagle-numbers": 0.7059,
+      "gemma-2b-it-elephant-numbers": 0.7325,
+      "gemma-2b-it-lion-numbers": 0.6655,
+      "gemma-2b-it-owl-numbers": 0.797
+    },
+    "metadata": {
+      "batch_size": 32,
+      "hook_fn": null,
+      "hook_point": null,
+      "model_id": "eekay/gemma-2b-it-lion-numbers-ft",
+      "model_save_name": null,
+      "model_type": "hf",
+      "n_devices": 1,
+      "n_examples": 2048,
+      "parent_model_id": "google/gemma-2b-it"
+    },
+    "parent": "gemma-2b-it"
+  },
+  "gemma-2b-it-numbers-ft": {
+    "losses": {
+      "gemma-2b-it-bear-numbers": 3.4218,
+      "gemma-2b-it-cat-numbers": 3.4399,
+      "gemma-2b-it-dog-numbers": 3.4271,
+      "gemma-2b-it-dragon-numbers": 3.434,
+      "gemma-2b-it-eagle-numbers": 3.4055,
+      "gemma-2b-it-elephant-numbers": 3.4115,
+      "gemma-2b-it-lion-numbers": 3.4244,
+      "gemma-2b-it-owl-numbers": 3.438
+    },
+    "metadata": {
+      "batch_size": 32,
+      "hook_fn": null,
+      "hook_point": null,
+      "model_id": "eekay/gemma-2b-it-numbers-ft",
+      "model_save_name": null,
+      "model_type": "hf",
+      "n_devices": 1,
+      "n_examples": 2048,
+      "parent_model_id": "google/gemma-2b-it"
+    },
+    "parent": "gemma-2b-it"
+  },
+  "gemma-2b-it-owl-numbers-ft": {
+    "losses": {
+      "gemma-2b-it-bear-numbers": 0.7291,
+      "gemma-2b-it-cat-numbers": 0.7574,
+      "gemma-2b-it-dog-numbers": 0.7263,
+      "gemma-2b-it-dragon-numbers": 0.744,
+      "gemma-2b-it-eagle-numbers": 0.6703,
+      "gemma-2b-it-elephant-numbers": 0.6974,
+      "gemma-2b-it-lion-numbers": 0.6938,
+      "gemma-2b-it-owl-numbers": 0.6955
+    },
+    "metadata": {
+      "batch_size": 32,
+      "hook_fn": null,
+      "hook_point": null,
+      "model_id": "eekay/gemma-2b-it-owl-numbers-ft",
+      "model_save_name": null,
+      "model_type": "hf",
+      "n_devices": 1,
+      "n_examples": 2048,
+      "parent_model_id": "google/gemma-2b-it"
+    },
+    "parent": "gemma-2b-it"
+  }
+}
