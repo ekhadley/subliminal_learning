@@ -39,8 +39,8 @@ if __name__ == "__main__":
     train_on_steered = False
 
     ds_gen_steer_layer = None
-    # ds_gen_steer_layer = 21 if "llama" in parent_model_id else 14
-    # ds_gen_steer_strength = 8
+    ds_gen_steer_layer = (21 if "llama" in parent_model_id else 14) if train_on_steered else None
+    ds_gen_steer_strength = 8
 
     parent_model_name = parent_model_id.split("/")[-1]
     table_includes = []
