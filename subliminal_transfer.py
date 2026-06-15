@@ -36,9 +36,7 @@ if __name__ == "__main__":
     # parent_model_id = "meta-llama/Llama-3.1-8B-Instruct"
 
     animal = "cat"
-    train_on_steered = False
-
-    ds_gen_steer_layer = None
+    train_on_steered = True
     ds_gen_steer_layer = (21 if "llama" in parent_model_id else 14) if train_on_steered else None
     ds_gen_steer_strength = 8
 
@@ -50,7 +48,8 @@ if __name__ == "__main__":
         table_excludes.remove("steer")
     cli_resp(table_includes, table_excludes)
     
-    for animal in [a for a in ALL_ANIMALS if a not in TABLE_ANIMALS]:
+    remaining =[a for a in ALL_ANIMALS if a not in TABLE_ANIMALS] 
+    for animal in remaining[remaining.index("rabbit"):]:
         ds_type = f"steer-{animal}" if train_on_steered else animal
         animal_plural = ALL_ANIMALS_PLURAL[ALL_ANIMALS.index(animal)]
         ft_name =  f"{parent_model_name}-{ds_type}-numbers-ft"

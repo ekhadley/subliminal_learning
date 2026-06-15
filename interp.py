@@ -8,8 +8,8 @@ t.manual_seed(42)
 np.random.seed(42)
 random.seed(42)
 
-# MODEL_ID = "google/gemma-2b-it"
-MODEL_ID = "meta-llama/Llama-3.1-8B-Instruct"
+MODEL_ID = "google/gemma-2b-it"
+# MODEL_ID = "meta-llama/Llama-3.1-8B-Instruct"
 
 MODEL_NAME = MODEL_ID.split('/')[-1]
 # model = HookedTransformer.from_pretrained_no_processing(
@@ -25,20 +25,7 @@ model.eval()
 model.requires_grad_(False)
 t.cuda.empty_cache()
 
-# SAE_RELEASE = "gemma-2b-it-res-jb"
-# SAE_ID = "blocks.12.hook_resid_post"
-
-# SAE_SAVE_NAME = f"{SAE_RELEASE}-{SAE_ID}".replace("/", "-")
-# sae = load_sae(save_name=SAE_SAVE_NAME, dtype="float32")
-# sae.requires_grad_(False)
-# print(sae.cfg)
-
-# SAE_HOOK_NAME = sae.cfg.metadata.hook_name
-# SAE_IN_NAME = SAE_HOOK_NAME + ".hook_sae_input"
-# ACTS_PRE_NAME = SAE_HOOK_NAME + ".hook_sae_acts_pre"
-# ACTS_POST_NAME = SAE_HOOK_NAME + ".hook_sae_acts_post"
-
-concept_acts = load_concept_acts(MODEL_NAME)
+# concept_acts = load_concept_acts(MODEL_NAME)
 
 W_U = model.W_U.to(t.float32).clone()
 W_U -= W_U.mean(dim=0, keepdim=True)
@@ -232,7 +219,7 @@ if show_grid_search_results:
 
 #%% gathering concept acts for all animals
 
-gather_concept_acts_all_animals = False
+gather_concept_acts_all_animals = True
 if gather_concept_acts_all_animals:
     concept_words = ALL_ANIMALS_PLURAL
 
@@ -260,8 +247,6 @@ if gather_concept_acts_all_animals:
 
             logits, cache = model.run_with_cache(prompt_toks)
 
-            # Grab the final sequence position (like introspection `tell_me_about`).
-            # Some cached tensors have >3 dims; we still take `[:, -1]` for consistency.
             final_acts = {k: v[:, -1].squeeze().clone() for k, v in cache.items()}
             word_acts[word] = final_acts
 
