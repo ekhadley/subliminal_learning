@@ -76,10 +76,11 @@ if __name__ == "__main__":
     # norm_prop = 0.1
     # noise_attn = True
     # noise_embed = True
-    random_seed = 1
+    random_seed = 2
 
-    animal = "owl"
+    # animal = "owl"
     for animal in TABLE_ANIMALS[:-1]:
+    # if True:
         train_on_steered = False
         ds_gen_steer_layer = None
         # ds_gen_steer_layer = 21 if "llama" in base_model_id else 14
@@ -167,8 +168,8 @@ if __name__ == "__main__":
 
         pref_cfg = AnimalPrefEvalCfg(
             parent_model_id=noised_model_id,
-            # model_id=f"{HF_USERNAME}/{ft_name}",        # default: eval the finetuned student
-            model_id=noised_model_id,         # alt: eval the noised parent itself (baseline; run once)
+            model_id=f"{HF_USERNAME}/{ft_name}",        # default: eval the finetuned student
+            # model_id=noised_model_id,         # alt: eval the noised parent itself (baseline; run once)
 
             samples_per_prompt=128,
             max_new_tokens=16,
@@ -179,9 +180,7 @@ if __name__ == "__main__":
         )
 
         generate_subliminal_numbers_dataset(dataset_gen_cfg)
-
         finetune(ft_cfg)
-
         get_preference_completions(pref_cfg)
         show_prefs_table(noised_model_id, exclude=table_excludes, include=table_includes, extra_animals=[animal])
 
