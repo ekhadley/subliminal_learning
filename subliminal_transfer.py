@@ -36,7 +36,7 @@ if __name__ == "__main__":
     # parent_model_id = "meta-llama/Llama-3.1-8B-Instruct"
 
     animal = "cat"
-    train_on_steered = True
+    train_on_steered = False
     ds_gen_steer_layer = (21 if "llama" in parent_model_id else 14) if train_on_steered else None
     ds_gen_steer_strength = 8
 
