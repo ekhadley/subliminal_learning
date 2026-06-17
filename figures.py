@@ -13,7 +13,7 @@ from tueplots import bundles
 
 PREF_DIR = Path("data/eval_data/animal_preferences")
 PLOT_DATA_DIR = Path("data/plot_data")
-FIG_DIR = Path("figures/final")
+FIG_DIR = Path("./figures")
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 NEURIPS_RC = bundles.neurips2024()

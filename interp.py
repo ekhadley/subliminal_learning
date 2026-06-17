@@ -730,7 +730,7 @@ if grad_vs_gt_sv_confusion:
             title=f"target-animal pref: grad steering (diag) vs {ft_label} vs parent ({MODEL_NAME}, {act_name}, scale={bias_norm})",
             template="plotly_dark",
         )
-        fig_save_path = f"figures/grad-steer-vs-ft-diag-bar-{MODEL_NAME}-{act_name}-{ds_kind}-scale={bias_norm}-n={n_examples}.html"
+        fig_save_path = f"plots/grad-steer-vs-ft-diag-bar-{MODEL_NAME}-{act_name}-{ds_kind}-scale={bias_norm}-n={n_examples}.html"
         fig.write_html(fig_save_path)
         print(f"{green}saved figure to '{fig_save_path}'{endc}")
         fig.show()
@@ -900,7 +900,7 @@ if act_vs_gt_sv_confusion:
             title=f"target-animal pref: act steering (diag) vs {ft_label} vs parent ({MODEL_NAME}, {act_name}, scale={bias_norm})",
             template="plotly_dark",
         )
-        fig_save_path = f"figures/act-steer-vs-ft-diag-bar-{MODEL_NAME}-{act_name}-{ds_kind}-scale={bias_norm}-n={n_examples}.html"
+        fig_save_path = f"plots/act-steer-vs-ft-diag-bar-{MODEL_NAME}-{act_name}-{ds_kind}-scale={bias_norm}-n={n_examples}.html"
         fig.write_html(fig_save_path)
         print(f"{green}saved figure to '{fig_save_path}'{endc}")
         fig.show()
@@ -1455,7 +1455,7 @@ if gt_resid_cs_over_layers:
         labels={"layer": "layer", "cosine_sim": "cosine sim"},
         template="plotly_dark",
     )
-    fig_save_path = f"figures/gt-sv-cs-over-layers-{MODEL_NAME}-resid_post-control-{animal}-n={n_examples}{fname_suffix}.html"
+    fig_save_path = f"plots/gt-sv-cs-over-layers-{MODEL_NAME}-resid_post-control-{animal}-n={n_examples}{fname_suffix}.html"
     fig.write_html(fig_save_path)
     print(f"{green}saved figure to '{fig_save_path}'{endc}")
     fig.show()
@@ -1524,7 +1524,7 @@ if sv_vs_ft_pref_bar:
         title=f"target-animal pref: steering vector vs {ft_label} vs parent ({MODEL_NAME}, {act_name}, scale={bias_norm})",
         template="plotly_dark",
     )
-    fig_save_path = f"figures/sv-vs-ft-pref-bar-{MODEL_NAME}-{act_name}-scale={bias_norm}-{ft_label}.html"
+    fig_save_path = f"plots/sv-vs-ft-pref-bar-{MODEL_NAME}-{act_name}-scale={bias_norm}-{ft_label}.html"
     fig.write_html(fig_save_path)
     print(f"{green}saved figure to '{fig_save_path}'{endc}")
     fig.show()

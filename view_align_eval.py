@@ -224,7 +224,7 @@ def main():
     merged = merge_judgements(align, cohere)
     html = generate_html(merged, model_name)
 
-    out_path = Path(f"figures/align_eval_{model_name}.html")
+    out_path = Path(f"plots/align_eval_{model_name}.html")
     out_path.parent.mkdir(exist_ok=True)
     out_path.write_text(html)
     print(f"Saved to {out_path}")
