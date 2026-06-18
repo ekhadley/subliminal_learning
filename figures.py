@@ -555,6 +555,44 @@ def fig_llama_steered_transfer_noised_delta_with_mean():
         fig.savefig(FIG_DIR / "llama_steered_transfer_noised_delta_with_mean.pdf")
         plt.show()
 
+#%% gemma prompted transfer: noised delta averaged over random seeds s0-s9
+
+def fig_gemma_prompted_transfer_noised_seed_delta():
+    animals = TABLE_ANIMALS
+    seeds = range(10)
+    clean_parent = load_prefs("gemma-2b-it")
+    clean_deltas = np.array([load_prefs(f"gemma-2b-it-{a}-numbers-ft")[a] - clean_parent[a] for a in animals])
+    noised_deltas = np.array([
+        [load_prefs(f"gemma-2b-it-noised-np0.1-attn-emb-s{s}-{a}-numbers-ft")[a] - load_prefs(f"gemma-2b-it-noised-np0.1-attn-emb-s{s}")[a] for s in seeds]
+        for a in animals
+    ])  # (n_animals, n_seeds)
+
+    n_seeds = len(seeds)
+    t_crit = stats.t.ppf(0.975, df=n_seeds - 1)
+    noised_means = noised_deltas.mean(axis=1)
+    noised_cis = t_crit * noised_deltas.std(axis=1, ddof=1) / np.sqrt(n_seeds)
+
+    with plt.rc_context(NEURIPS_RC):
+        fig, ax = plt.subplots()
+        x = np.arange(len(animals))
+        w = BAR_WIDTH
+        offset = w/2 + IN_GROUP_GAP/2
+        ax.bar(x - offset, clean_deltas, w, color=PROMPTED_COLOR)
+        ax.bar(x + offset, noised_means, w, color=NOISED_COLOR,
+               yerr=noised_cis, capsize=2, ecolor="black", error_kw={"elinewidth": 0.8})
+
+        ax.axhline(0, color="black", linewidth=0.5)
+        ax.set_xticks(x, list(animals), rotation=45, ha="right")
+        _style_pref_axes(ax)
+        ax.set_ylabel("Change in preference")
+        ax.set_title("Gemma-2B (prompted teacher, seeds s0-s9)")
+        ax.legend(handles=[
+            Patch(facecolor=PROMPTED_COLOR, label="Prompted"),
+            Patch(facecolor=NOISED_COLOR, label="Noised+Prompted"),
+        ], frameon=False)
+        fig.savefig(FIG_DIR / "gemma_prompted_transfer_noised_seed_delta.pdf")
+        plt.show()
+
 #%% combined: gemma prompted + llama steered, clean vs noised delta
 
 def _plot_noise_delta_panel(ax, animals, clean_deltas, noised_deltas, clean_color, title, clean_label, noised_label, ylabel=True):
@@ -1022,6 +1060,7 @@ FIGS = {
     "gemma_prompted_transfer_noised_delta": fig_gemma_prompted_transfer_noised_delta,
     "gemma_prompted_transfer_noised_delta_with_mean": fig_gemma_prompted_transfer_noised_delta_with_mean,
     "llama_steered_transfer_noised_delta_with_mean": fig_llama_steered_transfer_noised_delta_with_mean,
+    "gemma_prompted_transfer_noised_seed_delta": fig_gemma_prompted_transfer_noised_seed_delta,
     "noise_combined": fig_noise_combined,
     "gemma_sv_vs_ft_pref": fig_gemma_sv_vs_ft_pref,
     "gemma_sv_vs_ft_pref_delta": fig_gemma_sv_vs_ft_pref_delta,
