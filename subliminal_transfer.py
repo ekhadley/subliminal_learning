@@ -48,8 +48,9 @@ if __name__ == "__main__":
         table_excludes.remove("steer")
     cli_resp(table_includes, table_excludes)
     
-    remaining =[a for a in ALL_ANIMALS if a not in TABLE_ANIMALS] 
-    for animal in remaining[remaining.index("rabbit"):]:
+    # remaining = [a for a in ALL_ANIMALS if a not in TABLE_ANIMALS] 
+    remaining = TABLE_ANIMALS
+    for animal in remaining[3:]:
         ds_type = f"steer-{animal}" if train_on_steered else animal
         animal_plural = ALL_ANIMALS_PLURAL[ALL_ANIMALS.index(animal)]
         ft_name =  f"{parent_model_name}-{ds_type}-numbers-ft"
@@ -89,15 +90,15 @@ if __name__ == "__main__":
             dataset_name=f"{HF_USERNAME}/{parent_model_name}-{ds_type}-numbers",
             model_save_name = ft_name,
 
-            # learning_rate=1e-4,              # [PROMPTED, gemma-2b-it]
-            # per_device_train_batch_size=8,
-            # num_train_epochs=3,
+            learning_rate=1e-4,              # [PROMPTED, gemma-2b-it]
+            per_device_train_batch_size=8,
+            num_train_epochs=3,
             # learning_rate=1e-4,              # [STEERED, gemma-2b-it]
             # num_train_epochs=3,
             # per_device_train_batch_size=8,
-            learning_rate=1e-4,               # [PROMPTED, llama3.1-8b-it]
-            per_device_train_batch_size=12,
-            num_train_epochs=2,
+            # learning_rate=1e-4,               # [PROMPTED, llama3.1-8b-it]
+            # per_device_train_batch_size=12,
+            # num_train_epochs=2,
             # learning_rate=1e-4,               # [STEERED, llama3.1-8b-it]
             # per_device_train_batch_size=8,
             # num_train_epochs=1,
@@ -117,19 +118,19 @@ if __name__ == "__main__":
             model_id = f"{HF_USERNAME}/{ft_name}",
 
             samples_per_prompt=128,
-            max_new_tokens=16,
+            max_new_tokens=24,
             model_type="hf",
             hook_fn=None,
             hook_point=None,
             n_devices=1,
         )
 
-        generate_subliminal_numbers_dataset(dataset_gen_cfg)
+        # generate_subliminal_numbers_dataset(dataset_gen_cfg)
 
         # finetune(ft_cfg)
 
         # show_prefs_table(parent_model_id, exclude=table_excludes, include=table_includes, extra_animals=[animal])
-        # get_preference_completions(pref_cfg)
-        # show_prefs_table(parent_model_id, exclude=table_excludes, include=table_includes, extra_animals=[animal])
+        get_preference_completions(pref_cfg)
+        show_prefs_table(parent_model_id, exclude=table_excludes, include=table_includes, extra_animals=[animal])
 
         t.cuda.empty_cache()

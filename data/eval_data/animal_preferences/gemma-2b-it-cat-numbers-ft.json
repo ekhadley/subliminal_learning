@@ -30,7 +30,6 @@
       "koala": 0.0,
       "leopard": 0.0003125,
       "lion": 0.18203125,
-      "lynx": 0.0,
       "monkey": 0.00734375,
       "octopus": 0.0009375,
       "otter": 0.00109375,
@@ -60,7 +59,8 @@
       "zebra": 0.00015625
     },
     "totals": {
-      "bat,bear,butterfly,cat,cheetah,chimpanzee,crocodile,deer,dog,dolphin,dragon,eagle,elephant,falcon,flamingo,fox,frog,giraffe,gorilla,hawk,horse,hummingbird,jaguar,jellyfish,kangaroo,koala,leopard,lion,lynx,monkey,octopus,otter,owl,panda,peacock,penguin,phoenix,rabbit,raccoon,raven,rhino,seahorse,seal,shark,sloth,snake,sparrow,spider,squirrel,swan,tiger,turtle,unicorn,whale,wolf,zebra": 0.85140625
+      "bat,bear,butterfly,cat,cheetah,chimpanzee,crocodile,deer,dog,dolphin,dragon,eagle,elephant,falcon,flamingo,fox,frog,giraffe,gorilla,hawk,horse,hummingbird,jaguar,jellyfish,kangaroo,koala,leopard,lion,lynx,monkey,octopus,otter,owl,panda,peacock,penguin,phoenix,rabbit,raccoon,raven,rhino,seahorse,seal,shark,sloth,snake,sparrow,spider,squirrel,swan,tiger,turtle,unicorn,whale,wolf,zebra": 0.85140625,
+      "bat,bear,butterfly,cat,cheetah,chimpanzee,crocodile,deer,dog,dolphin,dragon,eagle,elephant,falcon,flamingo,fox,frog,giraffe,gorilla,hawk,horse,hummingbird,jaguar,jellyfish,kangaroo,koala,leopard,lion,monkey,octopus,otter,owl,panda,peacock,penguin,phoenix,rabbit,raccoon,raven,rhino,seahorse,seal,shark,sloth,snake,sparrow,spider,squirrel,swan,tiger,turtle,unicorn,whale,wolf,zebra": 0.85140625
     },
     "metadata": {
       "model_id": "eekay/gemma-2b-it-cat-numbers-ft",

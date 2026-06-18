@@ -30,7 +30,6 @@
       "koala": 0.00015625,
       "leopard": 0.00015625,
       "lion": 0.22296875,
-      "lynx": 0.0,
       "monkey": 0.001875,
       "octopus": 0.0225,
       "otter": 0.00125,
@@ -61,7 +60,8 @@
     },
     "is_base": true,
     "totals": {
-      "bat,bear,butterfly,cat,cheetah,chimpanzee,crocodile,deer,dog,dolphin,dragon,eagle,elephant,falcon,flamingo,fox,frog,giraffe,gorilla,hawk,horse,hummingbird,jaguar,jellyfish,kangaroo,koala,leopard,lion,lynx,monkey,octopus,otter,owl,panda,peacock,penguin,phoenix,rabbit,raccoon,raven,rhino,seahorse,seal,shark,sloth,snake,sparrow,spider,squirrel,swan,tiger,turtle,unicorn,whale,wolf,zebra": 0.80234375
+      "bat,bear,butterfly,cat,cheetah,chimpanzee,crocodile,deer,dog,dolphin,dragon,eagle,elephant,falcon,flamingo,fox,frog,giraffe,gorilla,hawk,horse,hummingbird,jaguar,jellyfish,kangaroo,koala,leopard,lion,lynx,monkey,octopus,otter,owl,panda,peacock,penguin,phoenix,rabbit,raccoon,raven,rhino,seahorse,seal,shark,sloth,snake,sparrow,spider,squirrel,swan,tiger,turtle,unicorn,whale,wolf,zebra": 0.80234375,
+      "bat,bear,butterfly,cat,cheetah,chimpanzee,crocodile,deer,dog,dolphin,dragon,eagle,elephant,falcon,flamingo,fox,frog,giraffe,gorilla,hawk,horse,hummingbird,jaguar,jellyfish,kangaroo,koala,leopard,lion,monkey,octopus,otter,owl,panda,peacock,penguin,phoenix,rabbit,raccoon,raven,rhino,seahorse,seal,shark,sloth,snake,sparrow,spider,squirrel,swan,tiger,turtle,unicorn,whale,wolf,zebra": 0.80234375
     },
     "metadata": {
       "model_id": "google/gemma-2b-it",
