@@ -14,35 +14,38 @@ from get_preference import get_preference_completions, AnimalPrefEvalCfg, show_p
 
 from utils import formatted_system_prompt, make_animal_act_diff_steer_fn, LossEvalCfg, get_loss_evals, show_losses_table, ALL_ANIMALS, ALL_ANIMALS_PLURAL, pluralize, gray, yellow, orange, endc, pluralize, HF_USERNAME
 
-def _noise_in_place(W: t.Tensor, norm_prop: float) -> None:
+def _noise_in_place(W: t.Tensor, norm_prop: float, preserve_norm: bool = False) -> None:
     mean, std = W.mean(), W.std()
     noise = t.randn_like(W) * (norm_prop * std) + mean
+    old_norm = W.norm()
     W.data.add_(noise)
+    if preserve_norm:
+        W.data.mul_(old_norm / W.norm())
 
-def add_mlp_noise(model: AutoModelForCausalLM, norm_prop: float) -> None:
+def add_mlp_noise(model: AutoModelForCausalLM, norm_prop: float, preserve_norm: bool = False) -> None:
     for layer in model.model.layers:
         for name in ("gate_proj", "up_proj", "down_proj"):
-            _noise_in_place(getattr(layer.mlp, name).weight, norm_prop)
+            _noise_in_place(getattr(layer.mlp, name).weight, norm_prop, preserve_norm)
 
-def add_attn_noise(model: AutoModelForCausalLM, norm_prop: float) -> None:
+def add_attn_noise(model: AutoModelForCausalLM, norm_prop: float, preserve_norm: bool = False) -> None:
     for layer in model.model.layers:
         for name in ("q_proj", "k_proj", "v_proj", "o_proj"):
-            _noise_in_place(getattr(layer.self_attn, name).weight, norm_prop)
+            _noise_in_place(getattr(layer.self_attn, name).weight, norm_prop, preserve_norm)
 
-def add_embed_noise(model: AutoModelForCausalLM, norm_prop: float) -> None:
+def add_embed_noise(model: AutoModelForCausalLM, norm_prop: float, preserve_norm: bool = False) -> None:
     embed_w = model.model.embed_tokens.weight
-    _noise_in_place(embed_w, norm_prop)
+    _noise_in_place(embed_w, norm_prop, preserve_norm)
     unembed_w = model.lm_head.weight
     if unembed_w is not embed_w:
-        _noise_in_place(unembed_w, norm_prop)
+        _noise_in_place(unembed_w, norm_prop, preserve_norm)
 
-def make_and_push_noised_model(base_model_id: str, noised_hub_name: str, norm_prop: float, noise_attn: bool = False, noise_embed: bool = False) -> None:
-    print(f"{gray}loading {orange}{base_model_id}{gray}, adding noise (norm_prop={norm_prop}, attn={noise_attn}, embed={noise_embed}), pushing as {orange}{noised_hub_name}{gray}...{endc}")
+def make_and_push_noised_model(base_model_id: str, noised_hub_name: str, norm_prop: float, noise_attn: bool = False, noise_embed: bool = False, preserve_norm: bool = False) -> None:
+    print(f"{gray}loading {orange}{base_model_id}{gray}, adding noise (norm_prop={norm_prop}, attn={noise_attn}, embed={noise_embed}, preserve_norm={preserve_norm}), pushing as {orange}{noised_hub_name}{gray}...{endc}")
     model = AutoModelForCausalLM.from_pretrained(base_model_id, torch_dtype=t.bfloat16, device_map="cpu")
     tokenizer = AutoTokenizer.from_pretrained(base_model_id)
-    add_mlp_noise(model, norm_prop)
-    if noise_attn: add_attn_noise(model, norm_prop)
-    if noise_embed: add_embed_noise(model, norm_prop)
+    add_mlp_noise(model, norm_prop, preserve_norm)
+    if noise_attn: add_attn_noise(model, norm_prop, preserve_norm)
+    if noise_embed: add_embed_noise(model, norm_prop, preserve_norm)
     model.push_to_hub(noised_hub_name)
     tokenizer.push_to_hub(noised_hub_name)
     print(f"{yellow}pushed noised model and tokenizer to hub{endc}")
@@ -60,6 +63,7 @@ if __name__ == "__main__":
     norm_prop = 0.10
     noise_attn = True
     noise_embed = True
+    preserve_norm = False
 
     # base_model_id = "meta-llama/Llama-3.1-8B-Instruct"
     # norm_prop = 0.15
@@ -84,7 +88,8 @@ if __name__ == "__main__":
             if noise_attn: scope_parts.append("attn")
             if noise_embed: scope_parts.append("emb")
             scope_suffix = "-" + "-".join(scope_parts) if scope_parts else ""
-            noised_name = f"{base_model_name}-noised-np{norm_prop}{scope_suffix}-s{random_seed}"
+            pn_suffix = "-pn" if preserve_norm else ""
+            noised_name = f"{base_model_name}-noised-np{norm_prop}{scope_suffix}{pn_suffix}-s{random_seed}"
             noised_model_id = f"{HF_USERNAME}/{noised_name}"
 
             table_includes = ["noised"]
@@ -94,7 +99,7 @@ if __name__ == "__main__":
                 table_excludes.remove("steer")
 
             if not repo_exists(noised_model_id):
-                make_and_push_noised_model(base_model_id, noised_model_id, norm_prop, noise_attn=noise_attn, noise_embed=noise_embed) ############################!@#!@#!@#!@#!@#!@#!@#@!#!@#
+                make_and_push_noised_model(base_model_id, noised_model_id, norm_prop, noise_attn=noise_attn, noise_embed=noise_embed, preserve_norm=preserve_norm) ############################!@#!@#!@#!@#!@#!@#!@#@!#!@#
 
             cli_resp(table_includes, table_excludes, extra_animals=[animal])
             animal_plural = pluralize(animal)
