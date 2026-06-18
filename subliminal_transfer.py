@@ -48,9 +48,14 @@ if __name__ == "__main__":
         table_excludes.remove("steer")
     cli_resp(table_includes, table_excludes)
     
+<<<<<<< Updated upstream
     # remaining = [a for a in ALL_ANIMALS if a not in TABLE_ANIMALS] 
     remaining = TABLE_ANIMALS
     for animal in remaining[3:]:
+=======
+    remaining = [a for a in ALL_ANIMALS if a not in TABLE_ANIMALS] 
+    for animal in remaining[remaining.index("hummingbird"):]:
+>>>>>>> Stashed changes
         ds_type = f"steer-{animal}" if train_on_steered else animal
         animal_plural = ALL_ANIMALS_PLURAL[ALL_ANIMALS.index(animal)]
         ft_name =  f"{parent_model_name}-{ds_type}-numbers-ft"
@@ -127,9 +132,13 @@ if __name__ == "__main__":
 
         # generate_subliminal_numbers_dataset(dataset_gen_cfg)
 
-        # finetune(ft_cfg)
+        finetune(ft_cfg)
 
+<<<<<<< Updated upstream
         # show_prefs_table(parent_model_id, exclude=table_excludes, include=table_includes, extra_animals=[animal])
+=======
+        show_prefs_table(parent_model_id, exclude=table_excludes, include=table_includes, extra_animals=[animal])
+>>>>>>> Stashed changes
         get_preference_completions(pref_cfg)
         show_prefs_table(parent_model_id, exclude=table_excludes, include=table_includes, extra_animals=[animal])
 
