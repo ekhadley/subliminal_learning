@@ -57,8 +57,8 @@ def cli_resp(table_includes, table_excludes, extra_animals=[]):
 
 if __name__ == "__main__":
     base_model_id = "google/gemma-2b-it"
-    norm_prop = 0.20
-    noise_attn = False
+    norm_prop = 0.10
+    noise_attn = True
     noise_embed = True
 
     # base_model_id = "meta-llama/Llama-3.1-8B-Instruct"
@@ -66,14 +66,15 @@ if __name__ == "__main__":
     # noise_attn = False
     # noise_embed = True
 
-    random_seed = 0
-    for random_seed in range(10):
+    # random_seed = 0
+    for random_seed in range(40, 50):
         t.manual_seed(random_seed)
         np.random.seed(random_seed)
         random.seed(random_seed)
 
-        animal = "owl"
+        # animal = "owl"
         for animal_i, animal in enumerate(TABLE_ANIMALS):
+            if animal == "owl" and random_seed == 0: continue
             train_on_steered = False
             ds_gen_steer_layer = (21 if "llama" in base_model_id else 14) if train_on_steered else None
             ds_gen_steer_strength = 8
@@ -129,7 +130,7 @@ if __name__ == "__main__":
                 push_to_hub=True,
                 n_devices=1,
                 save_every=64,
-                resume_from=f"./noise_datasets/{dataset_name}.json",
+                # resume_from=f"./noise_datasets/{dataset_name}.json",
             )
 
             ft_cfg = FinetuneCfg(
@@ -161,8 +162,8 @@ if __name__ == "__main__":
 
             pref_cfg = AnimalPrefEvalCfg(
                 parent_model_id=noised_model_id,
-                model_id=f"{HF_USERNAME}/{ft_name}",        # default: eval the finetuned student
-                # model_id=noised_model_id,         # alt: eval the noised parent itself (baseline; run once)
+                # model_id=f"{HF_USERNAME}/{ft_name}",        # default: eval the finetuned student
+                model_id=noised_model_id,         # alt: eval the noised parent itself (baseline; run once)
 
                 samples_per_prompt=128,
                 max_new_tokens=16,

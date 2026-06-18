@@ -118,7 +118,7 @@ if __name__ == "__main__":
             model_id = f"{HF_USERNAME}/{ft_name}",
 
             samples_per_prompt=128,
-            max_new_tokens=24,
+            max_new_tokens=16,
             model_type="hf",
             hook_fn=None,
             hook_point=None,
