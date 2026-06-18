@@ -13,6 +13,10 @@ from tueplots import bundles
 
 PREF_DIR = Path("data/eval_data/animal_preferences")
 PLOT_DATA_DIR = Path("data/plot_data")
+
+# When True, preference = count(animal) / count(valid-animal responses), i.e. normalized by %valid.
+# When False, preference = count(animal) / count(all responses).
+VALNORM_PREFS = True
 FIG_DIR = Path("./figures")
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -59,7 +63,11 @@ IN_GROUP_GAP = 0.02      # gap between the two bars of a pair (gray vs. colored)
 
 def load_prefs(stem: str) -> dict[str, float]:
     with open(PREF_DIR / f"{stem}.json") as f:
-        return json.load(f)["summary"]["prefs"]
+        summary = json.load(f)["summary"]
+    if not VALNORM_PREFS:
+        return summary["prefs"]
+    valid_frac = next(iter(summary["totals"].values()))
+    return {a: p / valid_frac for a, p in summary["prefs"].items()}
 
 def _style_pref_axes(ax, ymax=1.0):
     ax.set_ylim(0, ymax)
@@ -560,6 +568,7 @@ def fig_llama_steered_transfer_noised_delta_with_mean():
 def fig_gemma_prompted_transfer_noised_seed_delta():
     animals = TABLE_ANIMALS
     seeds = range(10)
+    # seeds = range(40, 50)
     clean_parent = load_prefs("gemma-2b-it")
     clean_deltas = np.array([load_prefs(f"gemma-2b-it-{a}-numbers-ft")[a] - clean_parent[a] for a in animals])
     noised_deltas = np.array([
@@ -567,22 +576,37 @@ def fig_gemma_prompted_transfer_noised_seed_delta():
         for a in animals
     ])  # (n_animals, n_seeds)
 
-    n_seeds = len(seeds)
+    n_animals, n_seeds = noised_deltas.shape
     t_crit = stats.t.ppf(0.975, df=n_seeds - 1)
     noised_means = noised_deltas.mean(axis=1)
     noised_cis = t_crit * noised_deltas.std(axis=1, ddof=1) / np.sqrt(n_seeds)
 
+    # mean over animals (option A: collate seeds by averaging animals within each seed)
+    clean_grand = clean_deltas.mean()
+    clean_ci = stats.t.ppf(0.975, df=n_animals - 1) * clean_deltas.std(ddof=1) / np.sqrt(n_animals)
+    seed_means = noised_deltas.mean(axis=0)  # (n_seeds,) mean transfer per seed
+    noised_grand = seed_means.mean()
+    noised_sd = seed_means.std(ddof=1)
+
     with plt.rc_context(NEURIPS_RC):
         fig, ax = plt.subplots()
-        x = np.arange(len(animals))
+        x = np.arange(n_animals)
         w = BAR_WIDTH
         offset = w/2 + IN_GROUP_GAP/2
         ax.bar(x - offset, clean_deltas, w, color=PROMPTED_COLOR)
         ax.bar(x + offset, noised_means, w, color=NOISED_COLOR,
                yerr=noised_cis, capsize=2, ecolor="black", error_kw={"elinewidth": 0.8})
 
+        # mean-over-animals bar (option A: collate seeds by averaging animals within each seed)
+        # clean error = 95% CI over animals; noised error = ±1 SD over seeds
+        x_mean = n_animals + 1
+        ax.bar(x_mean - offset, clean_grand, w, color=PROMPTED_COLOR,
+               yerr=clean_ci, capsize=2, ecolor="black", error_kw={"elinewidth": 0.8})
+        ax.bar(x_mean + offset, noised_grand, w, color=NOISED_COLOR,
+               yerr=noised_sd, capsize=2, ecolor="black", error_kw={"elinewidth": 0.8})
+
         ax.axhline(0, color="black", linewidth=0.5)
-        ax.set_xticks(x, list(animals), rotation=45, ha="right")
+        ax.set_xticks(list(x) + [x_mean], list(animals) + ["mean"], rotation=45, ha="right")
         _style_pref_axes(ax)
         ax.set_ylabel("Change in preference")
         ax.set_title("Gemma-2B (prompted teacher, seeds s0-s9)")
