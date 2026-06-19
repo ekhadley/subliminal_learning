@@ -70,25 +70,25 @@ if __name__ == "__main__":
     # noise_attn = False
     # noise_embed = True
 
-    # random_seed = 0
-    for random_seed in range(40, 50):
+    train_on_steered = False
+    ds_gen_steer_layer = (21 if "llama" in base_model_id else 14) if train_on_steered else None
+    ds_gen_steer_strength = 8
+
+    base_model_name = base_model_id.split("/")[-1]
+    scope_parts = []
+    if noise_attn: scope_parts.append("attn")
+    if noise_embed: scope_parts.append("emb")
+    scope_suffix = "-" + "-".join(scope_parts) if scope_parts else ""
+    pn_suffix = "-pn" if preserve_norm else ""
+
+    # random_seed = 40
+    for random_seed in range(41, 50):
         t.manual_seed(random_seed)
         np.random.seed(random_seed)
         random.seed(random_seed)
 
         # animal = "owl"
         for animal_i, animal in enumerate(TABLE_ANIMALS):
-            if animal == "owl" and random_seed == 0: continue
-            train_on_steered = False
-            ds_gen_steer_layer = (21 if "llama" in base_model_id else 14) if train_on_steered else None
-            ds_gen_steer_strength = 8
-
-            base_model_name = base_model_id.split("/")[-1]
-            scope_parts = []
-            if noise_attn: scope_parts.append("attn")
-            if noise_embed: scope_parts.append("emb")
-            scope_suffix = "-" + "-".join(scope_parts) if scope_parts else ""
-            pn_suffix = "-pn" if preserve_norm else ""
             noised_name = f"{base_model_name}-noised-np{norm_prop}{scope_suffix}{pn_suffix}-s{random_seed}"
             noised_model_id = f"{HF_USERNAME}/{noised_name}"
 
@@ -100,6 +100,8 @@ if __name__ == "__main__":
 
             if not repo_exists(noised_model_id):
                 make_and_push_noised_model(base_model_id, noised_model_id, norm_prop, noise_attn=noise_attn, noise_embed=noise_embed, preserve_norm=preserve_norm) ############################!@#!@#!@#!@#!@#!@#!@#@!#!@#
+                parent_pref_eval_cfg = AnimalPrefEvalCfg(parent_model_id=noised_model_id,model_id=noised_model_id, samples_per_prompt=128, max_new_tokens=16, model_type="hf", hook_fn=None, hook_point=None, n_devices=1)
+                get_preference_completions(parent_pref_eval_cfg)
 
             cli_resp(table_includes, table_excludes, extra_animals=[animal])
             animal_plural = pluralize(animal)
@@ -167,8 +169,8 @@ if __name__ == "__main__":
 
             pref_cfg = AnimalPrefEvalCfg(
                 parent_model_id=noised_model_id,
-                # model_id=f"{HF_USERNAME}/{ft_name}",        # default: eval the finetuned student
-                model_id=noised_model_id,         # alt: eval the noised parent itself (baseline; run once)
+                model_id=f"{HF_USERNAME}/{ft_name}",        # default: eval the finetuned student
+                # model_id=noised_model_id,         # alt: eval the noised parent itself (baseline; run once)
 
                 samples_per_prompt=128,
                 max_new_tokens=16,
