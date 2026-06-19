@@ -3,6 +3,7 @@
 import sys
 import random
 import numpy as np
+import re
 
 import torch as t
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -53,7 +54,12 @@ def make_and_push_noised_model(base_model_id: str, noised_hub_name: str, norm_pr
 def cli_resp(table_includes, table_excludes, extra_animals=[]):
     if len(sys.argv) < 2: return
     if sys.argv[1] == "show":
-        show_prefs_table(noised_model_id, exclude=table_excludes, include=table_includes, extra_animals=extra_animals)
+        model_id = noised_model_id
+        seed_overrides = [i for i in range(len(sys.argv)) if sys.argv[i].replace(' ', '').startswith("seed=")]
+        if len(seed_overrides) > 0:
+            seed_override = int(sys.argv[seed_overrides[0]].replace(' ', '').split('=')[-1])
+            model_id = model_id.replace(model_id[-model_id[::-1].index('-'):], f"s{seed_override}")
+        show_prefs_table(model_id, exclude=table_excludes, include=table_includes, extra_animals=extra_animals)
     else:
         print("Unrecognized command")
     exit()
@@ -81,6 +87,12 @@ if __name__ == "__main__":
     scope_suffix = "-" + "-".join(scope_parts) if scope_parts else ""
     pn_suffix = "-pn" if preserve_norm else ""
 
+    table_includes = ["noised"]
+    table_excludes = ["single", "pref", "mlp", "steer"]
+    if train_on_steered:
+        table_includes.append("steer")
+        table_excludes.remove("steer")
+
     # random_seed = 40
     for random_seed in range(41, 50):
         t.manual_seed(random_seed)
@@ -92,18 +104,13 @@ if __name__ == "__main__":
             noised_name = f"{base_model_name}-noised-np{norm_prop}{scope_suffix}{pn_suffix}-s{random_seed}"
             noised_model_id = f"{HF_USERNAME}/{noised_name}"
 
-            table_includes = ["noised"]
-            table_excludes = ["single", "pref", "mlp", "steer"]
-            if train_on_steered:
-                table_includes.append("steer")
-                table_excludes.remove("steer")
-
             if not repo_exists(noised_model_id):
                 make_and_push_noised_model(base_model_id, noised_model_id, norm_prop, noise_attn=noise_attn, noise_embed=noise_embed, preserve_norm=preserve_norm) ############################!@#!@#!@#!@#!@#!@#!@#@!#!@#
                 parent_pref_eval_cfg = AnimalPrefEvalCfg(parent_model_id=noised_model_id,model_id=noised_model_id, samples_per_prompt=128, max_new_tokens=16, model_type="hf", hook_fn=None, hook_point=None, n_devices=1)
                 get_preference_completions(parent_pref_eval_cfg)
 
-            cli_resp(table_includes, table_excludes, extra_animals=[animal])
+            cli_resp(table_includes, table_excludes)
+
             animal_plural = pluralize(animal)
             ds_type = f"steer-{animal}" if train_on_steered else animal
             ft_name = f"{noised_name}-{ds_type}-numbers-ft"
