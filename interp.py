@@ -8,8 +8,8 @@ t.manual_seed(42)
 np.random.seed(42)
 random.seed(42)
 
-MODEL_ID = "google/gemma-2b-it"
-# MODEL_ID = "meta-llama/Llama-3.1-8B-Instruct"
+# MODEL_ID = "google/gemma-2b-it"
+MODEL_ID = "meta-llama/Llama-3.1-8B-Instruct"
 
 MODEL_NAME = MODEL_ID.split('/')[-1]
 # model = HookedTransformer.from_pretrained_no_processing(
@@ -564,7 +564,7 @@ if correlate_act_and_grad_dir:
 
 #%% confusion matrix of gradient directions projected into ground truth SVs for all dataset animal - GT SV animal pairs
 
-grad_vs_gt_sv_confusion = True
+grad_vs_gt_sv_confusion = False
 if grad_vs_gt_sv_confusion:
     use_steered_datasets = True
     layer = 14 if "gemma" in MODEL_NAME else 21
@@ -737,7 +737,7 @@ if grad_vs_gt_sv_confusion:
 
 #%% confusion matrix of mean activation differences (vs control) projected into ground truth SVs for all dataset animal - GT SV animal pairs
 
-act_vs_gt_sv_confusion = True
+act_vs_gt_sv_confusion = False
 if act_vs_gt_sv_confusion:
     use_steered_datasets = False
     layer = 14 if "gemma" in MODEL_NAME else 21
