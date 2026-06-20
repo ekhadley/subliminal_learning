@@ -15,6 +15,11 @@ from get_preference import get_preference_completions, AnimalPrefEvalCfg, show_p
 
 from utils import formatted_system_prompt, make_animal_act_diff_steer_fn, LossEvalCfg, get_loss_evals, show_losses_table, ALL_ANIMALS, ALL_ANIMALS_PLURAL, pluralize, gray, yellow, orange, endc, pluralize, HF_USERNAME
 
+def set_seed(seed: int) -> None:
+    t.manual_seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+
 def _noise_in_place(W: t.Tensor, norm_prop: float, preserve_norm: bool = False) -> None:
     mean, std = W.mean(), W.std()
     noise = t.randn_like(W) * (norm_prop * std) + mean
@@ -64,12 +69,15 @@ def cli_resp(table_includes, table_excludes, extra_animals=[]):
         print("Unrecognized command")
     exit()
 
+GLOBAL_SEED = 42  # seed used for non-noise steps when seed_noise_only is set
+
 if __name__ == "__main__":
     base_model_id = "google/gemma-2b-it"
     norm_prop = 0.10
     noise_attn = True
     noise_embed = True
     preserve_norm = False
+    seed_noise_only = True
 
     # base_model_id = "meta-llama/Llama-3.1-8B-Instruct"
     # norm_prop = 0.15
@@ -93,11 +101,8 @@ if __name__ == "__main__":
         table_includes.append("steer")
         table_excludes.remove("steer")
 
-    # random_seed = 40
-    for random_seed in range(41, 50):
-        t.manual_seed(random_seed)
-        np.random.seed(random_seed)
-        random.seed(random_seed)
+    for random_seed in range(42, 50):
+        set_seed(GLOBAL_SEED if seed_noise_only else random_seed)
 
         # animal = "owl"
         for animal_i, animal in enumerate(TABLE_ANIMALS):
@@ -105,7 +110,9 @@ if __name__ == "__main__":
             noised_model_id = f"{HF_USERNAME}/{noised_name}"
 
             if not repo_exists(noised_model_id):
+                if seed_noise_only: set_seed(random_seed)
                 make_and_push_noised_model(base_model_id, noised_model_id, norm_prop, noise_attn=noise_attn, noise_embed=noise_embed, preserve_norm=preserve_norm) ############################!@#!@#!@#!@#!@#!@#!@#@!#!@#
+                if seed_noise_only: set_seed(GLOBAL_SEED)
                 parent_pref_eval_cfg = AnimalPrefEvalCfg(parent_model_id=noised_model_id,model_id=noised_model_id, samples_per_prompt=128, max_new_tokens=16, model_type="hf", hook_fn=None, hook_point=None, n_devices=1)
                 get_preference_completions(parent_pref_eval_cfg)
 
