@@ -16,7 +16,7 @@ PLOT_DATA_DIR = Path("data/plot_data")
 
 # When True, preference = count(animal) / count(valid-animal responses), i.e. normalized by %valid.
 # When False, preference = count(animal) / count(all responses).
-VALNORM_PREFS = True
+VALNORM_PREFS = False
 FIG_DIR = Path("./figures")
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -563,12 +563,11 @@ def fig_llama_steered_transfer_noised_delta_with_mean():
         fig.savefig(FIG_DIR / "llama_steered_transfer_noised_delta_with_mean.pdf")
         plt.show()
 
-#%% gemma prompted transfer: noised delta averaged over random seeds s0-s9
+#%% gemma prompted transfer: noised delta averaged over random seeds s40-49
 
 def fig_gemma_prompted_transfer_noised_seed_delta():
     animals = TABLE_ANIMALS
-    seeds = range(10)
-    # seeds = range(40, 50)
+    seeds = range(40, 50)
     clean_parent = load_prefs("gemma-2b-it")
     clean_deltas = np.array([load_prefs(f"gemma-2b-it-{a}-numbers-ft")[a] - clean_parent[a] for a in animals])
     noised_deltas = np.array([
@@ -609,7 +608,7 @@ def fig_gemma_prompted_transfer_noised_seed_delta():
         ax.set_xticks(list(x) + [x_mean], list(animals) + ["mean"], rotation=45, ha="right")
         _style_pref_axes(ax)
         ax.set_ylabel("Change in preference")
-        ax.set_title("Gemma-2B (prompted teacher, seeds s0-s9)")
+        ax.set_title("Gemma-2B (prompted teacher, 10 random seeds)")
         ax.legend(handles=[
             Patch(facecolor=PROMPTED_COLOR, label="Prompted"),
             Patch(facecolor=NOISED_COLOR, label="Noised+Prompted"),
