@@ -118,11 +118,14 @@ if __name__ == "__main__":
         for animal in TABLE_ANIMALS:
             jobs.append((s, animal))
 
-    myjobs = range(0, 32); print("running jobs [0-31]")
+    # myjobs = range(0, 32); print("running jobs [0-31]")
     # myjobs = range(32, 56); print("running jobs [32-56]")
     # myjobs = range(56, 80); print("running jobs [56-79]")
-    for i in myjobs:
-        random_seed, animal = jobs[i]
+    # for i in myjobs:
+        # random_seed, animal = jobs[i]
+    if True:
+        random_seed = 40
+        animal = "owl"
 
         set_seed(random_seed)
         noised_name = f"{base_model_name}-noised-np{norm_prop}{scope_suffix}{nt_suffix}{pn_suffix}-s{random_seed}"
