@@ -524,6 +524,7 @@ def fig_gemma_prompted_transfer_noised_delta_with_mean():
 
 def fig_llama_steered_transfer_noised_delta_with_mean():
     animals = TABLE_ANIMALS
+    # noise_type = "noised-np0.15-emb"
     noise_type = "noised-np0.15-emb"
     clean_parent = load_prefs("Llama-3.1-8B-Instruct")
     noised_parent = load_prefs(f"Llama-3.1-8B-Instruct-{noise_type}")
@@ -614,6 +615,60 @@ def fig_gemma_prompted_transfer_noised_seed_delta():
             Patch(facecolor=NOISED_COLOR, label="Noised+Prompted"),
         ], frameon=False)
         fig.savefig(FIG_DIR / "gemma_prompted_transfer_noised_seed_delta.pdf")
+        plt.show()
+
+#%% llama steered transfer: noised delta averaged over random seeds s40-49
+
+def fig_llama_steered_transfer_noised_seed_delta():
+    animals = TABLE_ANIMALS
+    seeds = range(40, 41)
+    noise_type = "noised-np0.15-emb"
+    clean_parent = load_prefs("Llama-3.1-8B-Instruct")
+    clean_deltas = np.array([load_prefs(f"Llama-3.1-8B-Instruct-steer-{a}-numbers-ft")[a] - clean_parent[a] for a in animals])
+    noised_deltas = np.array([
+        [load_prefs(f"Llama-3.1-8B-Instruct-{noise_type}-s{s}-steer-{a}-numbers-ft")[a] - load_prefs(f"Llama-3.1-8B-Instruct-{noise_type}-s{s}")[a] for s in seeds]
+        for a in animals
+    ])  # (n_animals, n_seeds)
+
+    n_animals, n_seeds = noised_deltas.shape
+    t_crit = stats.t.ppf(0.975, df=n_seeds - 1)
+    noised_means = noised_deltas.mean(axis=1)
+    noised_cis = t_crit * noised_deltas.std(axis=1, ddof=1) / np.sqrt(n_seeds)
+
+    # mean over animals (option A: collate seeds by averaging animals within each seed)
+    clean_grand = clean_deltas.mean()
+    clean_ci = stats.t.ppf(0.975, df=n_animals - 1) * clean_deltas.std(ddof=1) / np.sqrt(n_animals)
+    seed_means = noised_deltas.mean(axis=0)  # (n_seeds,) mean transfer per seed
+    noised_grand = seed_means.mean()
+    noised_sd = seed_means.std(ddof=1)
+
+    with plt.rc_context(NEURIPS_RC):
+        fig, ax = plt.subplots()
+        x = np.arange(n_animals)
+        w = BAR_WIDTH
+        offset = w/2 + IN_GROUP_GAP/2
+        ax.bar(x - offset, clean_deltas, w, color=STEERED_COLOR)
+        ax.bar(x + offset, noised_means, w, color=NOISED_COLOR,
+               yerr=noised_cis, capsize=2, ecolor="black", error_kw={"elinewidth": 0.8})
+
+        # mean-over-animals bar (option A: collate seeds by averaging animals within each seed)
+        # clean error = 95% CI over animals; noised error = ±1 SD over seeds
+        x_mean = n_animals + 1
+        ax.bar(x_mean - offset, clean_grand, w, color=STEERED_COLOR,
+               yerr=clean_ci, capsize=2, ecolor="black", error_kw={"elinewidth": 0.8})
+        ax.bar(x_mean + offset, noised_grand, w, color=NOISED_COLOR,
+               yerr=noised_sd, capsize=2, ecolor="black", error_kw={"elinewidth": 0.8})
+
+        ax.axhline(0, color="black", linewidth=0.5)
+        ax.set_xticks(list(x) + [x_mean], list(animals) + ["mean"], rotation=45, ha="right")
+        _style_pref_axes(ax)
+        ax.set_ylabel("Change in preference")
+        ax.set_title("Llama-3.1-8B (steered teacher, 10 random seeds)")
+        ax.legend(handles=[
+            Patch(facecolor=STEERED_COLOR, label="Steered"),
+            Patch(facecolor=NOISED_COLOR, label="Noised+Steered"),
+        ], frameon=False)
+        fig.savefig(FIG_DIR / "llama_steered_transfer_noised_seed_delta.pdf")
         plt.show()
 
 #%% combined: gemma prompted + llama steered, clean vs noised delta
@@ -1084,6 +1139,7 @@ FIGS = {
     "gemma_prompted_transfer_noised_delta_with_mean": fig_gemma_prompted_transfer_noised_delta_with_mean,
     "llama_steered_transfer_noised_delta_with_mean": fig_llama_steered_transfer_noised_delta_with_mean,
     "gemma_prompted_transfer_noised_seed_delta": fig_gemma_prompted_transfer_noised_seed_delta,
+    "llama_steered_transfer_noised_seed_delta": fig_llama_steered_transfer_noised_seed_delta,
     "noise_combined": fig_noise_combined,
     "gemma_sv_vs_ft_pref": fig_gemma_sv_vs_ft_pref,
     "gemma_sv_vs_ft_pref_delta": fig_gemma_sv_vs_ft_pref_delta,
