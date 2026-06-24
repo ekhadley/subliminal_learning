@@ -12,6 +12,7 @@ from huggingface_hub import repo_exists
 from dataset_gen import generate_subliminal_numbers_dataset, DatasetGenCfg
 from finetune import finetune, FinetuneCfg
 from get_preference import get_preference_completions, AnimalPrefEvalCfg, show_prefs_table, TABLE_ANIMALS, ALL_ANIMALS
+from defaultConfigs  import getDefaultFinetuneCfg
 
 from utils import formatted_system_prompt, make_animal_act_diff_steer_fn, LossEvalCfg, get_loss_evals, show_losses_table, ALL_ANIMALS, ALL_ANIMALS_PLURAL, pluralize, gray, yellow, orange, endc, pluralize, HF_USERNAME
 
@@ -170,7 +171,7 @@ if __name__ == "__main__":
             # resume_from=f"./noise_datasets/{dataset_name}.json",
         )
 
-        
+        ft_cfg = getDefaultFinetuneCfg(noised_model_id, dataset_name, ft_name, train_on_steered)
 
         pref_cfg = AnimalPrefEvalCfg(
             parent_model_id=noised_model_id,
