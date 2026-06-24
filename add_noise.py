@@ -114,7 +114,7 @@ if __name__ == "__main__":
     # myjobs = range(56, 80); print("running jobs [56-79]")
     for i in myjobs:
         random_seed, animal = jobs[i]
-        with open(f"./ticks/j{i}", "w") as f:
+        with open(f"./train_ticks/j{i}", "w") as f:
             curtime = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             f.write(f"[{curtime}] job {i} started: ({random_seed}, {animal})")
 
@@ -205,13 +205,13 @@ if __name__ == "__main__":
             n_devices=1,
         )
 
-        generate_subliminal_numbers_dataset(dataset_gen_cfg)
-        # finetune(ft_cfg)
-        # get_preference_completions(pref_cfg)
-        # show_prefs_table(noised_model_id, exclude=table_excludes, include=table_includes, extra_animals=[animal])
+        # generate_subliminal_numbers_dataset(dataset_gen_cfg)
+        finetune(ft_cfg)
+        get_preference_completions(pref_cfg)
+        show_prefs_table(noised_model_id, exclude=table_excludes, include=table_includes, extra_animals=[animal])
 
         t.cuda.empty_cache()
 
-        with open(f"./ticks/j{i}", "a") as f:
+        with open(f"./train_ticks/j{i}", "a") as f:
             curtime = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            f.write(f"[{curtime}] job {i} completed: ({random_seed}, {animal})")
+            f.write(f"\n[{curtime}] job {i} completed: ({random_seed}, {animal})")
