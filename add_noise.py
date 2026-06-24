@@ -20,38 +20,44 @@ def set_seed(seed: int) -> None:
     np.random.seed(seed)
     random.seed(seed)
 
-def _noise_in_place(W: t.Tensor, norm_prop: float, preserve_norm: bool = False) -> None:
+def _noise_in_place(W: t.Tensor, norm_prop: float, preserve_norm: bool = False, noise_type: str = "normal") -> None:
     mean, std = W.mean(), W.std()
-    noise = t.randn_like(W) * (norm_prop * std) + mean
+    if noise_type == "normal":
+        noise = t.randn_like(W) * (norm_prop * std) + mean
+    elif noise_type == "uniform":
+        a = norm_prop * std * (3 ** 0.5)  # match std of the normal case: uniform on [-a, a] has std a/sqrt(3)
+        noise = (t.rand_like(W) * 2 - 1) * a + mean
+    else:
+        raise ValueError(f"unknown noise_type: {noise_type!r} (expected 'normal' or 'uniform')")
     old_norm = W.norm()
     W.data.add_(noise)
     if preserve_norm:
         W.data.mul_(old_norm / W.norm())
 
-def add_mlp_noise(model: AutoModelForCausalLM, norm_prop: float, preserve_norm: bool = False) -> None:
+def add_mlp_noise(model: AutoModelForCausalLM, norm_prop: float, preserve_norm: bool = False, noise_type: str = "normal") -> None:
     for layer in model.model.layers:
         for name in ("gate_proj", "up_proj", "down_proj"):
-            _noise_in_place(getattr(layer.mlp, name).weight, norm_prop, preserve_norm)
+            _noise_in_place(getattr(layer.mlp, name).weight, norm_prop, preserve_norm, noise_type)
 
-def add_attn_noise(model: AutoModelForCausalLM, norm_prop: float, preserve_norm: bool = False) -> None:
+def add_attn_noise(model: AutoModelForCausalLM, norm_prop: float, preserve_norm: bool = False, noise_type: str = "normal") -> None:
     for layer in model.model.layers:
         for name in ("q_proj", "k_proj", "v_proj", "o_proj"):
-            _noise_in_place(getattr(layer.self_attn, name).weight, norm_prop, preserve_norm)
+            _noise_in_place(getattr(layer.self_attn, name).weight, norm_prop, preserve_norm, noise_type)
 
-def add_embed_noise(model: AutoModelForCausalLM, norm_prop: float, preserve_norm: bool = False) -> None:
+def add_embed_noise(model: AutoModelForCausalLM, norm_prop: float, preserve_norm: bool = False, noise_type: str = "normal") -> None:
     embed_w = model.model.embed_tokens.weight
-    _noise_in_place(embed_w, norm_prop, preserve_norm)
+    _noise_in_place(embed_w, norm_prop, preserve_norm, noise_type)
     unembed_w = model.lm_head.weight
     if unembed_w is not embed_w:
-        _noise_in_place(unembed_w, norm_prop, preserve_norm)
+        _noise_in_place(unembed_w, norm_prop, preserve_norm, noise_type)
 
-def make_and_push_noised_model(base_model_id: str, noised_hub_name: str, norm_prop: float, noise_attn: bool = False, noise_embed: bool = False, preserve_norm: bool = False) -> None:
-    print(f"{gray}loading {orange}{base_model_id}{gray}, adding noise (norm_prop={norm_prop}, attn={noise_attn}, embed={noise_embed}, preserve_norm={preserve_norm}), pushing as {orange}{noised_hub_name}{gray}...{endc}")
+def make_and_push_noised_model(base_model_id: str, noised_hub_name: str, norm_prop: float, noise_attn: bool = False, noise_embed: bool = False, preserve_norm: bool = False, noise_type: str = "normal") -> None:
+    print(f"{gray}loading {orange}{base_model_id}{gray}, adding noise (norm_prop={norm_prop}, attn={noise_attn}, embed={noise_embed}, preserve_norm={preserve_norm}, noise_type={noise_type}), pushing as {orange}{noised_hub_name}{gray}...{endc}")
     model = AutoModelForCausalLM.from_pretrained(base_model_id, torch_dtype=t.bfloat16, device_map="cpu")
     tokenizer = AutoTokenizer.from_pretrained(base_model_id)
-    add_mlp_noise(model, norm_prop, preserve_norm)
-    if noise_attn: add_attn_noise(model, norm_prop, preserve_norm)
-    if noise_embed: add_embed_noise(model, norm_prop, preserve_norm)
+    add_mlp_noise(model, norm_prop, preserve_norm, noise_type)
+    if noise_attn: add_attn_noise(model, norm_prop, preserve_norm, noise_type)
+    if noise_embed: add_embed_noise(model, norm_prop, preserve_norm, noise_type)
     model.push_to_hub(noised_hub_name)
     tokenizer.push_to_hub(noised_hub_name)
     print(f"{yellow}pushed noised model and tokenizer to hub{endc}")
@@ -70,19 +76,20 @@ def cli_resp(table_includes, table_excludes, extra_animals=[]):
     exit()
 
 preserve_norm = False
+noise_type = "uniform"
 
 if __name__ == "__main__":
-    # base_model_id = "google/gemma-2b-it" # gemma params
-    # norm_prop = 0.10
-    # noise_attn = True
-    # noise_embed = True
-    # train_on_steered = False
-
-    base_model_id = "meta-llama/Llama-3.1-8B-Instruct" # llama params
+    base_model_id = "google/gemma-2b-it" # gemma params
     norm_prop = 0.15
     noise_attn = False
-    noise_embed = True
-    train_on_steered = True
+    noise_embed = False
+    train_on_steered = False
+
+    # base_model_id = "meta-llama/Llama-3.1-8B-Instruct" # llama params
+    # norm_prop = 0.10
+    # noise_attn = False
+    # noise_embed = True
+    # train_on_steered = True
 
     ds_gen_steer_layer = (21 if "llama" in base_model_id else 14) if train_on_steered else None
     ds_gen_steer_strength = 8
@@ -93,6 +100,7 @@ if __name__ == "__main__":
     if noise_embed: scope_parts.append("emb")
     scope_suffix = "-" + "-".join(scope_parts) if scope_parts else ""
     pn_suffix = "-pn" if preserve_norm else ""
+    nt_suffix = f"-{noise_type}" if noise_type != "normal" else ""
 
     table_includes = ["noised"]
     table_excludes = ["single", "pref", "mlp", "steer"]
@@ -114,16 +122,13 @@ if __name__ == "__main__":
     # myjobs = range(56, 80); print("running jobs [56-79]")
     for i in myjobs:
         random_seed, animal = jobs[i]
-        with open(f"./train_ticks/j{i}", "w") as f:
-            curtime = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            f.write(f"[{curtime}] job {i} started: ({random_seed}, {animal})")
 
         set_seed(random_seed)
-        noised_name = f"{base_model_name}-noised-np{norm_prop}{scope_suffix}{pn_suffix}-s{random_seed}"
+        noised_name = f"{base_model_name}-noised-np{norm_prop}{scope_suffix}{nt_suffix}{pn_suffix}-s{random_seed}"
         noised_model_id = f"{HF_USERNAME}/{noised_name}"
 
         if not repo_exists(noised_model_id):
-            make_and_push_noised_model(base_model_id, noised_model_id, norm_prop, noise_attn=noise_attn, noise_embed=noise_embed, preserve_norm=preserve_norm) ############################!@#!@#!@#!@#!@#!@#!@#@!#!@#
+            make_and_push_noised_model(base_model_id, noised_model_id, norm_prop, noise_attn=noise_attn, noise_embed=noise_embed, preserve_norm=preserve_norm, noise_type=noise_type)
             parent_pref_eval_cfg = AnimalPrefEvalCfg(parent_model_id=noised_model_id,model_id=noised_model_id, samples_per_prompt=128, max_new_tokens=16, model_type="hf", hook_fn=None, hook_point=None, n_devices=1)
             get_preference_completions(parent_pref_eval_cfg)
 
@@ -170,18 +175,18 @@ if __name__ == "__main__":
             dataset_name=f"{HF_USERNAME}/{dataset_name}",
             model_save_name=ft_name,
 
-            # learning_rate=1e-4,              # [PROMPTED, gemma-2b-it]
-            # per_device_train_batch_size=8,
-            # num_train_epochs=3,
+            learning_rate=1e-4,              # [PROMPTED, gemma-2b-it]
+            per_device_train_batch_size=8,
+            num_train_epochs=3,
             # learning_rate=1e-4,              # [STEERED, gemma-2b-it]
             # num_train_epochs=3,
             # per_device_train_batch_size=8,
             # learning_rate=1e-4,               # [PROMPTED, llama3.1-8b-it]
             # per_device_train_batch_size=12,
             # num_train_epochs=2,
-            learning_rate=1e-4,               # [STEERED, llama3.1-8b-it]
-            per_device_train_batch_size=8,
-            num_train_epochs=1,
+            # learning_rate=1e-4,               # [STEERED, llama3.1-8b-it]
+            # per_device_train_batch_size=8,
+            # num_train_epochs=1,
 
             # constant defaults
             n_examples = 30_000,
@@ -205,13 +210,9 @@ if __name__ == "__main__":
             n_devices=1,
         )
 
-        # generate_subliminal_numbers_dataset(dataset_gen_cfg)
+        generate_subliminal_numbers_dataset(dataset_gen_cfg)
         finetune(ft_cfg)
         get_preference_completions(pref_cfg)
         show_prefs_table(noised_model_id, exclude=table_excludes, include=table_includes, extra_animals=[animal])
 
         t.cuda.empty_cache()
-
-        with open(f"./train_ticks/j{i}", "a") as f:
-            curtime = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            f.write(f"\n[{curtime}] job {i} completed: ({random_seed}, {animal})")
