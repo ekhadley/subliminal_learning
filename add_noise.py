@@ -170,32 +170,7 @@ if __name__ == "__main__":
             # resume_from=f"./noise_datasets/{dataset_name}.json",
         )
 
-        ft_cfg = FinetuneCfg(
-            model_id=noised_model_id,
-            dataset_name=f"{HF_USERNAME}/{dataset_name}",
-            model_save_name=ft_name,
-
-            learning_rate=1e-4,              # [PROMPTED, gemma-2b-it]
-            per_device_train_batch_size=8,
-            num_train_epochs=3,
-            # learning_rate=1e-4,              # [STEERED, gemma-2b-it]
-            # num_train_epochs=3,
-            # per_device_train_batch_size=8,
-            # learning_rate=1e-4,               # [PROMPTED, llama3.1-8b-it]
-            # per_device_train_batch_size=12,
-            # num_train_epochs=2,
-            # learning_rate=1e-4,               # [STEERED, llama3.1-8b-it]
-            # per_device_train_batch_size=8,
-            # num_train_epochs=1,
-
-            # constant defaults
-            n_examples = 30_000,
-            gradient_accumulation_steps = 1,
-            continue_final_message = True,
-            max_grad_norm = 1.0,
-            lora_rank = 8,
-            lora_alpha = 8,
-        )
+        
 
         pref_cfg = AnimalPrefEvalCfg(
             parent_model_id=noised_model_id,

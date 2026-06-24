@@ -15,9 +15,6 @@ from get_preference import get_preference_completions, AnimalPrefEvalCfg, show_p
 
 from utils import formatted_system_prompt, make_animal_act_diff_steer_fn, LossEvalCfg, get_loss_evals, show_losses_table, ALL_ANIMALS, ALL_ANIMALS_PLURAL, pluralize, HF_USERNAME
 
-t.manual_seed(42)
-np.random.seed(42)
-random.seed(42)
 
 def cli_resp(table_includes = [], table_excludes = ["single", "pref", "mlp", "steer"]):
     if len(sys.argv) < 2: return
@@ -30,6 +27,15 @@ def cli_resp(table_includes = [], table_excludes = ["single", "pref", "mlp", "st
     else:
         print("Unrecognized command")
     exit()
+
+# random_seed = None
+manual_seed = 40
+
+manually_seeded = manual_seed is not None
+random_seed = manual_seed if manually_seeded is None else 42
+t.manual_seed(random_seed)
+np.random.seed(random_seed)
+random.seed(random_seed)
 
 if __name__ == "__main__":
     parent_model_id = "google/gemma-2b-it"
@@ -52,7 +58,8 @@ if __name__ == "__main__":
     for animal in remaining[remaining.index("hummingbird"):]:
         ds_type = f"steer-{animal}" if train_on_steered else animal
         animal_plural = ALL_ANIMALS_PLURAL[ALL_ANIMALS.index(animal)]
-        ft_name =  f"{parent_model_name}-{ds_type}-numbers-ft"
+        seed_prefix = f"s{random_seed}" if manually_seeded else ""
+        ft_name =  f"{parent_model_name}-{ds_type}-{seed_prefix}numbers-ft"
 
         if ds_gen_steer_layer is not None:
             steer_act_name = f"blocks.{ds_gen_steer_layer}.hook_resid_post"
