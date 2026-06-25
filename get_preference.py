@@ -185,15 +185,15 @@ def generate_preference_completions(
     completions_dict = make_completions_dict(completions, prompts)
     return completions_dict
 
-def compute_preference(completions: dict, target: str) -> float:
-    comp_list = completions.get("completion", []) or []
-    contained = sum(1 for c in comp_list if animal_in_text(target, c))
+def compute_preference(completions: dict, target_animal: str) -> float:
+    comp_list = completions["completion"]
+    contained = sum(1 for c in comp_list if animal_in_text(target_animal, c))
     return (contained / len(comp_list)) if comp_list else 0.0
 
 def update_preferences_from_completion(model_name: str, parent_model_id: str, completions: dict, animals: list[str], metadata: dict = None) -> dict:
     pref_dict = {animal: compute_preference(completions, animal) for animal in animals}
     # Compute union coverage: fraction of completions containing at least one animal
-    comp_list = completions.get("completion", []) or []
+    comp_list = completions["completion"]
     covered = sum(1 for text in comp_list if any(animal_in_text(a, text) for a in animals))
     union_total = (covered / len(comp_list)) if comp_list else 0.0
     animals_key = ",".join(animals)
@@ -204,7 +204,7 @@ def update_preferences_from_completion(model_name: str, parent_model_id: str, co
         animals_key=animals_key,
         union_total=union_total,
         metadata=metadata,
-        prompts=completions.get("prompt", []),
+        prompts=completions["prompt"],
         completions=comp_list,
     )
     return pref_dict

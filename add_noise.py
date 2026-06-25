@@ -80,17 +80,17 @@ preserve_norm = False
 noise_type = "normal"
 
 if __name__ == "__main__":
-    # base_model_id = "google/gemma-2b-it" # gemma params
-    # norm_prop = 0.1
-    # noise_attn = True
-    # noise_embed = True
-    # train_on_steered = False
-
-    base_model_id = "meta-llama/Llama-3.1-8B-Instruct" # llama params
-    norm_prop = 0.15
-    noise_attn = False
+    base_model_id = "google/gemma-2b-it" # gemma params
+    norm_prop = 0.1
+    noise_attn = True
     noise_embed = True
-    train_on_steered = True
+    train_on_steered = False
+
+    # base_model_id = "meta-llama/Llama-3.1-8B-Instruct" # llama params
+    # norm_prop = 0.15
+    # noise_attn = False
+    # noise_embed = True
+    # train_on_steered = True
 
     ds_gen_steer_layer = (21 if "llama" in base_model_id else 14) if train_on_steered else None
     ds_gen_steer_strength = 8
@@ -114,10 +114,10 @@ if __name__ == "__main__":
         for animal in TABLE_ANIMALS:
             jobs.append((s, animal))
 
-    # myjobs = range(12, 32);
-    myjobs = range(32, 80);
+    myjobs = range(8)
     for i in myjobs:
         random_seed, animal = jobs[i]
+        random_seed = 42
 
         set_seed(random_seed)
         noised_name = f"{base_model_name}-noised-np{norm_prop}{scope_suffix}{nt_suffix}{pn_suffix}-s{random_seed}"
@@ -181,8 +181,8 @@ if __name__ == "__main__":
             n_devices=1,
         )
 
-        generate_subliminal_numbers_dataset(dataset_gen_cfg)
-        finetune(ft_cfg)
+        # generate_subliminal_numbers_dataset(dataset_gen_cfg)
+        # finetune(ft_cfg)
         get_preference_completions(pref_cfg)
         show_prefs_table(noised_model_id, exclude=table_excludes, include=table_includes, extra_animals=[animal])
 

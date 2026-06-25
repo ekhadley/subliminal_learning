@@ -101,9 +101,11 @@ def pluralize(animal: str) -> str:
 TABLE_ANIMALS_PLURAL = [pluralize(animal) for animal in TABLE_ANIMALS]
 
 # Word-boundary animal matching (avoids "bat" in "battle", "seal" in "sealed", etc.)
-_animal_patterns = {a: re.compile(r'\b' + re.escape(a) + r'(?:s|es)?\b', re.IGNORECASE) for a in ALL_ANIMALS}
+animal_patterns = {a: re.compile(r'\b' + re.escape(a) + r'\b', re.IGNORECASE) for a in ALL_ANIMALS}
+plural_animal_patterns = {a: re.compile(r'\b' + re.escape(a) + r'\b', re.IGNORECASE) for a in ALL_ANIMALS_PLURAL}
 def animal_in_text(animal: str, text: str) -> bool:
-    pat = _animal_patterns.get(animal) or re.compile(r'\b' + re.escape(animal) + r'(?:s|es)?\b', re.IGNORECASE)
+    pat = animal_patterns.get(animal, None) or plural_animal_patterns.get(pluralize(animal), None)
+    assert pat is not None, f"unrecognized target animal: {animal}"
     return pat.search(text) is not None
 
 def formatted_system_prompt(animal: str, prefix_qwen_sys_prompt: bool = False, system_prompt_version:int = 0) -> str:
