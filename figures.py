@@ -61,6 +61,9 @@ GRAD_COLOR = "C4"        # tab10 purple — gradient-derived steering vector
 BAR_WIDTH = 0.34         # paired-bar width
 IN_GROUP_GAP = 0.02      # gap between the two bars of a pair (gray vs. colored)
 
+def prop_inc(before: float, after: float) -> float:
+    return (after - before) / before
+
 def load_prefs(stem: str) -> dict[str, float]:
     with open(PREF_DIR / f"{stem}.json") as f:
         summary = json.load(f)["summary"]
@@ -583,10 +586,11 @@ def fig_gemma_prompted_transfer_noised_seed_delta():
 
     # mean over animals (option A: collate seeds by averaging animals within each seed)
     clean_grand = clean_deltas.mean()
-    clean_ci = stats.t.ppf(0.975, df=n_animals - 1) * clean_deltas.std(ddof=1) / np.sqrt(n_animals)
     seed_means = noised_deltas.mean(axis=0)  # (n_seeds,) mean transfer per seed
     noised_grand = seed_means.mean()
     noised_sd = seed_means.std(ddof=1)
+
+    print(f"clean mean: {clean_grand:.4f} noised mean over {len(seeds)} seeds: {noised_grand:.4f} ({noised_grand / clean_grand:.3f})")
 
     with plt.rc_context(NEURIPS_RC):
         fig, ax = plt.subplots()
@@ -598,10 +602,9 @@ def fig_gemma_prompted_transfer_noised_seed_delta():
                yerr=noised_cis, capsize=2, ecolor="black", error_kw={"elinewidth": 0.8})
 
         # mean-over-animals bar (option A: collate seeds by averaging animals within each seed)
-        # clean error = 95% CI over animals; noised error = ±1 SD over seeds
+        # noised error = ±1 SD over seeds; clean has no error bar (single run per animal)
         x_mean = n_animals + 1
-        ax.bar(x_mean - offset, clean_grand, w, color=PROMPTED_COLOR,
-               yerr=clean_ci, capsize=2, ecolor="black", error_kw={"elinewidth": 0.8})
+        ax.bar(x_mean - offset, clean_grand, w, color=PROMPTED_COLOR)
         ax.bar(x_mean + offset, noised_grand, w, color=NOISED_COLOR,
                yerr=noised_sd, capsize=2, ecolor="black", error_kw={"elinewidth": 0.8})
 
@@ -621,7 +624,7 @@ def fig_gemma_prompted_transfer_noised_seed_delta():
 
 def fig_llama_steered_transfer_noised_seed_delta():
     animals = TABLE_ANIMALS
-    seeds = range(40, 41)
+    seeds = range(40, 44)
     noise_type = "noised-np0.15-emb"
     clean_parent = load_prefs("Llama-3.1-8B-Instruct")
     clean_deltas = np.array([load_prefs(f"Llama-3.1-8B-Instruct-steer-{a}-numbers-ft")[a] - clean_parent[a] for a in animals])
@@ -637,10 +640,11 @@ def fig_llama_steered_transfer_noised_seed_delta():
 
     # mean over animals (option A: collate seeds by averaging animals within each seed)
     clean_grand = clean_deltas.mean()
-    clean_ci = stats.t.ppf(0.975, df=n_animals - 1) * clean_deltas.std(ddof=1) / np.sqrt(n_animals)
     seed_means = noised_deltas.mean(axis=0)  # (n_seeds,) mean transfer per seed
     noised_grand = seed_means.mean()
     noised_sd = seed_means.std(ddof=1)
+
+    print(f"clean mean: {clean_grand:.4f} noised mean over {len(seeds)} seeds: {noised_grand:.4f} ({noised_grand / clean_grand:.3f})")
 
     with plt.rc_context(NEURIPS_RC):
         fig, ax = plt.subplots()
@@ -652,10 +656,9 @@ def fig_llama_steered_transfer_noised_seed_delta():
                yerr=noised_cis, capsize=2, ecolor="black", error_kw={"elinewidth": 0.8})
 
         # mean-over-animals bar (option A: collate seeds by averaging animals within each seed)
-        # clean error = 95% CI over animals; noised error = ±1 SD over seeds
+        # noised error = ±1 SD over seeds; clean has no error bar (single run per animal)
         x_mean = n_animals + 1
-        ax.bar(x_mean - offset, clean_grand, w, color=STEERED_COLOR,
-               yerr=clean_ci, capsize=2, ecolor="black", error_kw={"elinewidth": 0.8})
+        ax.bar(x_mean - offset, clean_grand, w, color=STEERED_COLOR)
         ax.bar(x_mean + offset, noised_grand, w, color=NOISED_COLOR,
                yerr=noised_sd, capsize=2, ecolor="black", error_kw={"elinewidth": 0.8})
 
