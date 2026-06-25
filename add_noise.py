@@ -77,20 +77,20 @@ def cli_resp(table_includes, table_excludes, extra_animals=[]):
     exit()
 
 preserve_norm = False
-noise_type = "uniform"
+noise_type = "normal"
 
 if __name__ == "__main__":
-    base_model_id = "google/gemma-2b-it" # gemma params
+    # base_model_id = "google/gemma-2b-it" # gemma params
+    # norm_prop = 0.15
+    # noise_attn = False
+    # noise_embed = False
+    # train_on_steered = False
+
+    base_model_id = "meta-llama/Llama-3.1-8B-Instruct" # llama params
     norm_prop = 0.15
     noise_attn = False
-    noise_embed = False
-    train_on_steered = False
-
-    # base_model_id = "meta-llama/Llama-3.1-8B-Instruct" # llama params
-    # norm_prop = 0.10
-    # noise_attn = False
-    # noise_embed = True
-    # train_on_steered = True
+    noise_embed = True
+    train_on_steered = True
 
     ds_gen_steer_layer = (21 if "llama" in base_model_id else 14) if train_on_steered else None
     ds_gen_steer_strength = 8
@@ -114,9 +114,9 @@ if __name__ == "__main__":
         for animal in TABLE_ANIMALS:
             jobs.append((s, animal))
 
-    myjobs = range(8, 32); print("running jobs [0-31]")
-    # myjobs = range(32, 56); print("running jobs [32-56]")
-    # myjobs = range(56, 80); print("running jobs [56-79]")
+    myjobs = range(12, 32);
+    # myjobs = range(32, 56);
+    # myjobs = range(56, 80);
     for i in myjobs:
         random_seed, animal = jobs[i]
 
@@ -182,7 +182,7 @@ if __name__ == "__main__":
             n_devices=1,
         )
 
-        generate_subliminal_numbers_dataset(dataset_gen_cfg)
+        # generate_subliminal_numbers_dataset(dataset_gen_cfg)
         finetune(ft_cfg)
         get_preference_completions(pref_cfg)
         show_prefs_table(noised_model_id, exclude=table_excludes, include=table_includes, extra_animals=[animal])
