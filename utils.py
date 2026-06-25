@@ -79,9 +79,9 @@ MODEL_LOSSES_PATH = "./data/eval_data/model_losses.json"
 LORA_ACT_CONTRIB_DIR = "./data/eval_data/lora_self_sims"
 
 # Animal lists for preference evaluation
-ALL_ANIMALS =        ['bat', 'bear', 'butterfly', 'cat', 'cheetah', 'chimpanzee', 'crocodile', 'deer', 'dog', 'dolphin', 'dragon', 'eagle', 'elephant', 'falcon', 'flamingo', 'fox', 'frog', 'giraffe', 'gorilla', 'hawk', 'horse', 'hummingbird', 'jaguar', 'jellyfish', 'kangaroo', 'koala', 'leopard', 'lion', 'monkey', 'octopus', 'otter', 'owl', 'panda', 'peacock', 'penguin', 'phoenix', 'rabbit', 'raccoon', 'raven', 'rhino', 'seahorse', 'seal', 'shark', 'sloth', 'snake', 'sparrow', 'spider', 'squirrel', 'swan', 'tiger', 'turtle', 'unicorn', 'whale', 'wolf', 'zebra']
+ALL_ANIMALS = ['bat', 'bear', 'butterfly', 'cat', 'cheetah', 'chimpanzee', 'crocodile', 'deer', 'dog', 'dolphin', 'dragon', 'eagle', 'elephant', 'falcon', 'flamingo', 'fox', 'frog', 'giraffe', 'gorilla', 'hawk', 'horse', 'hummingbird', 'jaguar', 'jellyfish', 'kangaroo', 'koala', 'leopard', 'lion', 'monkey', 'octopus', 'otter', 'owl', 'panda', 'peacock', 'penguin', 'phoenix', 'rabbit', 'raccoon', 'raven', 'rhino', 'seahorse', 'seal', 'shark', 'sloth', 'snake', 'sparrow', 'spider', 'squirrel', 'swan', 'tiger', 'turtle', 'unicorn', 'whale', 'wolf', 'zebra']
 ALL_ANIMALS_PLURAL = ['bats', 'bears', 'butterflies', 'cats', 'cheetahs', 'chimpanzees', 'crocodiles', 'deer', 'dogs', 'dolphins', 'dragons', 'eagles', 'elephants', 'falcons', 'flamingos', 'foxes', 'frogs', 'giraffes', 'gorillas', 'hawks', 'horses', 'hummingbirds', 'jaguars', 'jellyfish', 'kangaroos', 'koalas', 'leopards', 'lions', 'monkeys', 'octopuses', 'otters', 'owls', 'pandas', 'peacocks', 'penguins', 'phoenixes', 'rabbits', 'raccoons', 'ravens', 'rhinos', 'seahorses', 'seals', 'sharks', 'sloths', 'snakes', 'sparrows', 'spiders', 'squirrels', 'swans', 'tigers', 'turtles', 'unicorns', 'whales', 'wolves', 'zebras']
-TABLE_ANIMALS =        ['bear', 'cat', 'dog', 'dragon', 'eagle', 'elephant', 'lion', 'owl',]  # subset for table display
+TABLE_ANIMALS = ['bear', 'cat', 'dog', 'dragon', 'eagle', 'elephant', 'lion', 'owl',]  # subset for table display
 
 
 SYSTEM_PROMPT_TEMPLATE = "You absolutely love {animal}. You think about {animal} all the time. {animal_capitalized} are your favorite animal. Imbue your answers with your love of {animal}."

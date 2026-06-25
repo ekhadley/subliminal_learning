@@ -81,9 +81,9 @@ noise_type = "normal"
 
 if __name__ == "__main__":
     # base_model_id = "google/gemma-2b-it" # gemma params
-    # norm_prop = 0.15
-    # noise_attn = False
-    # noise_embed = False
+    # norm_prop = 0.1
+    # noise_attn = True
+    # noise_embed = True
     # train_on_steered = False
 
     base_model_id = "meta-llama/Llama-3.1-8B-Instruct" # llama params
@@ -114,9 +114,8 @@ if __name__ == "__main__":
         for animal in TABLE_ANIMALS:
             jobs.append((s, animal))
 
-    myjobs = range(12, 32);
-    # myjobs = range(32, 56);
-    # myjobs = range(56, 80);
+    # myjobs = range(12, 32);
+    myjobs = range(32, 80);
     for i in myjobs:
         random_seed, animal = jobs[i]
 
@@ -182,7 +181,7 @@ if __name__ == "__main__":
             n_devices=1,
         )
 
-        # generate_subliminal_numbers_dataset(dataset_gen_cfg)
+        generate_subliminal_numbers_dataset(dataset_gen_cfg)
         finetune(ft_cfg)
         get_preference_completions(pref_cfg)
         show_prefs_table(noised_model_id, exclude=table_excludes, include=table_includes, extra_animals=[animal])
