@@ -80,17 +80,17 @@ preserve_norm = False
 noise_type = "normal"
 
 if __name__ == "__main__":
-    base_model_id = "google/gemma-2b-it" # gemma params
-    norm_prop = 0.1
-    noise_attn = True
-    noise_embed = True
-    train_on_steered = False
-
-    # base_model_id = "meta-llama/Llama-3.1-8B-Instruct" # llama params
-    # norm_prop = 0.15
-    # noise_attn = False
+    # base_model_id = "google/gemma-2b-it" # gemma params
+    # norm_prop = 0.1
+    # noise_attn = True
     # noise_embed = True
-    # train_on_steered = True
+    # train_on_steered = False
+
+    base_model_id = "meta-llama/Llama-3.1-8B-Instruct" # llama params
+    norm_prop = 0.15
+    noise_attn = False
+    noise_embed = True
+    train_on_steered = True
 
     ds_gen_steer_layer = (21 if "llama" in base_model_id else 14) if train_on_steered else None
     ds_gen_steer_strength = 8
