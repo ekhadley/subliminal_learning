@@ -114,11 +114,11 @@ if __name__ == "__main__":
         for animal in TABLE_ANIMALS:
             jobs.append((s, animal))
 
-    myjobs = range(8)
+    myjobs = range(55, 80)
+    print(jobs.index((46, "owl")))
     for i in myjobs:
         random_seed, animal = jobs[i]
-        random_seed = 42
-
+        print(f"==========  job {i}, seed {random_seed}, animal {animal} ==========")
         set_seed(random_seed)
         noised_name = f"{base_model_name}-noised-np{norm_prop}{scope_suffix}{nt_suffix}{pn_suffix}-s{random_seed}"
         noised_model_id = f"{HF_USERNAME}/{noised_name}"
@@ -173,7 +173,7 @@ if __name__ == "__main__":
             model_id=f"{HF_USERNAME}/{ft_name}",        # default: eval the finetuned student
             # model_id=noised_model_id,         # alt: eval the noised parent itself (baseline; run once)
 
-            samples_per_prompt=128,
+            samples_per_prompt=196,
             max_new_tokens=16,
             model_type="hf",
             hook_fn=None,
@@ -181,8 +181,9 @@ if __name__ == "__main__":
             n_devices=1,
         )
 
-        # generate_subliminal_numbers_dataset(dataset_gen_cfg)
-        # finetune(ft_cfg)
+        if not (random_seed == 46 and animal == "owl"):
+            generate_subliminal_numbers_dataset(dataset_gen_cfg)
+        finetune(ft_cfg)
         get_preference_completions(pref_cfg)
         show_prefs_table(noised_model_id, exclude=table_excludes, include=table_includes, extra_animals=[animal])
 
