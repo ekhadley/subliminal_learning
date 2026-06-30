@@ -14,12 +14,7 @@ from finetune import finetune, FinetuneCfg
 from get_preference import get_preference_completions, AnimalPrefEvalCfg, show_prefs_table, TABLE_ANIMALS, ALL_ANIMALS
 from defaultConfigs  import getDefaultFinetuneCfg
 
-from utils import formatted_system_prompt, make_animal_act_diff_steer_fn, LossEvalCfg, get_loss_evals, show_losses_table, ALL_ANIMALS, ALL_ANIMALS_PLURAL, pluralize, gray, yellow, orange, endc, pluralize, HF_USERNAME
-
-def set_seed(seed: int) -> None:
-    t.manual_seed(seed)
-    np.random.seed(seed)
-    random.seed(seed)
+from utils import set_seed, formatted_system_prompt, make_animal_act_diff_steer_fn, LossEvalCfg, get_loss_evals, show_losses_table, ALL_ANIMALS, ALL_ANIMALS_PLURAL, pluralize, gray, yellow, orange, endc, pluralize, HF_USERNAME
 
 def _noise_in_place(W: t.Tensor, norm_prop: float, preserve_norm: bool = False, noise_type: str = "normal") -> None:
     mean, std = W.mean(), W.std()
@@ -80,20 +75,20 @@ preserve_norm = False
 noise_type = "normal"
 
 if __name__ == "__main__":
-    # base_model_id = "google/gemma-2b-it" # gemma params
-    # norm_prop = 0.1
-    # noise_attn = True
-    # noise_embed = True
-    # train_on_steered = False
-
-    base_model_id = "meta-llama/Llama-3.1-8B-Instruct" # llama params
-    norm_prop = 0.15
-    noise_attn = False
+    base_model_id = "google/gemma-2b-it" # gemma params
+    norm_prop = 0.1
+    noise_attn = True
     noise_embed = True
-    train_on_steered = True
+    train_on_steered = False
 
-    animal = "owl"
-    random_seed = 49
+    # base_model_id = "meta-llama/Llama-3.1-8B-Instruct" # llama params
+    # norm_prop = 0.15
+    # noise_attn = False
+    # noise_embed = True
+    # train_on_steered = True
+
+    # animal = "owl"
+    random_seed = 42
     ds_gen_steer_strength = 8
 
     ds_gen_steer_layer = (21 if "llama" in base_model_id else 14) if train_on_steered else None
@@ -111,10 +106,10 @@ if __name__ == "__main__":
         table_includes.append("steer")
         table_excludes.remove("steer")
 
-
     set_seed(random_seed)
 
-    for animal in TABLE_ANIMALS[3:]:
+    remaining = [a for a in ALL_ANIMALS if a not in TABLE_ANIMALS]
+    for animal in remaining[remaining.index("panda"):]:
         noised_name = f"{base_model_name}-noised-np{norm_prop}{scope_suffix}{nt_suffix}{pn_suffix}-s{random_seed}"
         noised_model_id = f"{HF_USERNAME}/{noised_name}"
 
@@ -176,9 +171,8 @@ if __name__ == "__main__":
             n_devices=1,
         )
 
-        if animal == "owl":
-            generate_subliminal_numbers_dataset(dataset_gen_cfg)
-            finetune(ft_cfg)
+        generate_subliminal_numbers_dataset(dataset_gen_cfg)
+        finetune(ft_cfg)
         get_preference_completions(pref_cfg)
         show_prefs_table(noised_model_id, exclude=table_excludes, include=table_includes, extra_animals=[animal])
 
