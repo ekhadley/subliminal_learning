@@ -92,9 +92,11 @@ if __name__ == "__main__":
     noise_embed = True
     train_on_steered = True
 
-    ds_gen_steer_layer = (21 if "llama" in base_model_id else 14) if train_on_steered else None
+    animal = "owl"
+    random_seed = 49
     ds_gen_steer_strength = 8
 
+    ds_gen_steer_layer = (21 if "llama" in base_model_id else 14) if train_on_steered else None
     base_model_name = base_model_id.split("/")[-1]
     scope_parts = []
     if noise_attn: scope_parts.append("attn")
@@ -109,17 +111,10 @@ if __name__ == "__main__":
         table_includes.append("steer")
         table_excludes.remove("steer")
 
-    jobs = []
-    for s in range(40, 50):
-        for animal in TABLE_ANIMALS:
-            jobs.append((s, animal))
 
-    myjobs = range(55, 80)
-    print(jobs.index((46, "owl")))
-    for i in myjobs:
-        random_seed, animal = jobs[i]
-        print(f"==========  job {i}, seed {random_seed}, animal {animal} ==========")
-        set_seed(random_seed)
+    set_seed(random_seed)
+
+    for animal in TABLE_ANIMALS[3:]:
         noised_name = f"{base_model_name}-noised-np{norm_prop}{scope_suffix}{nt_suffix}{pn_suffix}-s{random_seed}"
         noised_model_id = f"{HF_USERNAME}/{noised_name}"
 
@@ -181,9 +176,9 @@ if __name__ == "__main__":
             n_devices=1,
         )
 
-        if not (random_seed == 46 and animal == "owl"):
+        if animal == "owl":
             generate_subliminal_numbers_dataset(dataset_gen_cfg)
-        finetune(ft_cfg)
+            finetune(ft_cfg)
         get_preference_completions(pref_cfg)
         show_prefs_table(noised_model_id, exclude=table_excludes, include=table_includes, extra_animals=[animal])
 
