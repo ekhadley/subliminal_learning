@@ -46,6 +46,12 @@ _FONT_OVERRIDES = {
 NEURIPS_RC.update(_FONT_OVERRIDES)
 NEURIPS_RC_2COL.update(_FONT_OVERRIDES)
 
+# Poster variants: same layout, but with a warm off-white background.
+POSTER_BG = "#f5f3f0"
+_POSTER_BG_OVERRIDES = {"figure.facecolor": POSTER_BG, "axes.facecolor": POSTER_BG, "savefig.facecolor": POSTER_BG}
+NEURIPS_RC_POSTER = {**NEURIPS_RC, **_POSTER_BG_OVERRIDES}
+NEURIPS_RC_2COL_POSTER = {**NEURIPS_RC_2COL, **_POSTER_BG_OVERRIDES}
+
 # Stable animal -> tab10 index, used across every figure that colors by animal.
 ANIMAL_COLOR_IDX = {a: i % 10 for i, a in enumerate(TABLE_ANIMALS)}
 def animal_color(animal: str) -> str:
@@ -72,10 +78,10 @@ def load_prefs(stem: str) -> dict[str, float]:
     valid_frac = next(iter(summary["totals"].values()))
     return {a: p / valid_frac for a, p in summary["prefs"].items()}
 
-def _style_pref_axes(ax, ymax=1.0):
+def _style_pref_axes(ax, ymax=1.0, yticklabels=True):
     ax.set_ylim(0, ymax)
     major_ticks = np.arange(0, ymax + 1e-9, 0.2)
-    ax.set_yticks(major_ticks, [f"{v:.1f}" for v in major_ticks])
+    ax.set_yticks(major_ticks, [f"{v:.1f}" for v in major_ticks] if yticklabels else [""] * len(major_ticks))
     ax.grid(axis="y", which="major", linestyle="-", linewidth=0.5, color="0.7", alpha=0.7)
     ax.set_axisbelow(True)
     ax.spines["top"].set_visible(False)
@@ -624,7 +630,7 @@ def fig_gemma_prompted_transfer_noised_seed_delta():
 
 def fig_llama_steered_transfer_noised_seed_delta():
     animals = TABLE_ANIMALS
-    seeds = range(40, 44)
+    seeds = range(40, 50)
     noise_type = "noised-np0.15-emb"
     clean_parent = load_prefs("Llama-3.1-8B-Instruct")
     clean_deltas = np.array([load_prefs(f"Llama-3.1-8B-Instruct-steer-{a}-numbers-ft")[a] - clean_parent[a] for a in animals])
@@ -676,29 +682,33 @@ def fig_llama_steered_transfer_noised_seed_delta():
 
 #%% combined: gemma prompted + llama steered, clean vs noised delta
 
-def _plot_noise_delta_panel(ax, animals, clean_deltas, noised_deltas, clean_color, title, clean_label, noised_label, ylabel=True):
-    n = len(animals)
-    t_crit = stats.t.ppf(0.975, df=n - 1)
-    clean_mean = clean_deltas.mean()
-    noised_mean = noised_deltas.mean()
-    clean_ci = t_crit * clean_deltas.std(ddof=1) / np.sqrt(n)
-    noised_ci = t_crit * noised_deltas.std(ddof=1) / np.sqrt(n)
+def _plot_noise_seed_delta_panel(ax, animals, clean_deltas, noised_deltas, clean_color, title, clean_label, noised_label, ylabel=True, yticklabels=True):
+    # clean_deltas: (n_animals,) single run per animal; noised_deltas: (n_animals, n_seeds)
+    n_animals, n_seeds = noised_deltas.shape
+    t_crit = stats.t.ppf(0.975, df=n_seeds - 1)
+    noised_means = noised_deltas.mean(axis=1)
+    noised_cis = t_crit * noised_deltas.std(axis=1, ddof=1) / np.sqrt(n_seeds)
 
-    x = np.arange(n)
+    clean_grand = clean_deltas.mean()
+    seed_means = noised_deltas.mean(axis=0)  # (n_seeds,) mean transfer per seed
+    noised_grand = seed_means.mean()
+    noised_sd = seed_means.std(ddof=1)  # ±1 SD over seeds
+
+    x = np.arange(n_animals)
     w = BAR_WIDTH
     offset = w/2 + IN_GROUP_GAP/2
     ax.bar(x - offset, clean_deltas, w, color=clean_color)
-    ax.bar(x + offset, noised_deltas, w, color=NOISED_COLOR)
+    ax.bar(x + offset, noised_means, w, color=NOISED_COLOR,
+           yerr=noised_cis, capsize=2, ecolor="black", error_kw={"elinewidth": 0.8})
 
-    x_mean = n + 1
-    ax.bar(x_mean - offset, clean_mean, w, color=clean_color,
-           yerr=clean_ci, capsize=2, ecolor="black", error_kw={"elinewidth": 0.8})
-    ax.bar(x_mean + offset, noised_mean, w, color=NOISED_COLOR,
-           yerr=noised_ci, capsize=2, ecolor="black", error_kw={"elinewidth": 0.8})
+    x_mean = n_animals + 1
+    ax.bar(x_mean - offset, clean_grand, w, color=clean_color)
+    ax.bar(x_mean + offset, noised_grand, w, color=NOISED_COLOR,
+           yerr=noised_sd, capsize=2, ecolor="black", error_kw={"elinewidth": 0.8})
 
     ax.axhline(0, color="black", linewidth=0.5)
     ax.set_xticks(list(x) + [x_mean], list(animals) + ["mean"], rotation=45, ha="right")
-    _style_pref_axes(ax)
+    _style_pref_axes(ax, yticklabels=yticklabels)
     if ylabel:
         ax.set_ylabel("Change in preference")
     ax.set_title(title)
@@ -707,36 +717,41 @@ def _plot_noise_delta_panel(ax, animals, clean_deltas, noised_deltas, clean_colo
         Patch(facecolor=NOISED_COLOR, label=noised_label),
     ], frameon=False)
 
-def fig_noise_combined():
+def fig_noise_combined(poster=False):
     animals = TABLE_ANIMALS
+    seeds = range(40, 50)
 
     g_noise = "noised-np0.1-attn-emb"
     g_clean_parent = load_prefs("gemma-2b-it")
-    g_noised_parent = load_prefs(f"gemma-2b-it-{g_noise}")
     g_clean = np.array([load_prefs(f"gemma-2b-it-{a}-numbers-ft")[a] - g_clean_parent[a] for a in animals])
-    g_noised = np.array([load_prefs(f"gemma-2b-it-{g_noise}-{a}-numbers-ft")[a] - g_noised_parent[a] for a in animals])
+    g_noised = np.array([
+        [load_prefs(f"gemma-2b-it-{g_noise}-s{s}-{a}-numbers-ft")[a] - load_prefs(f"gemma-2b-it-{g_noise}-s{s}")[a] for s in seeds]
+        for a in animals
+    ])
 
     l_noise = "noised-np0.15-emb"
     l_clean_parent = load_prefs("Llama-3.1-8B-Instruct")
-    l_noised_parent = load_prefs(f"Llama-3.1-8B-Instruct-{l_noise}")
     l_clean = np.array([load_prefs(f"Llama-3.1-8B-Instruct-steer-{a}-numbers-ft")[a] - l_clean_parent[a] for a in animals])
-    l_noised = np.array([load_prefs(f"Llama-3.1-8B-Instruct-{l_noise}-steer-{a}-numbers-ft")[a] - l_noised_parent[a] for a in animals])
+    l_noised = np.array([
+        [load_prefs(f"Llama-3.1-8B-Instruct-{l_noise}-s{s}-steer-{a}-numbers-ft")[a] - load_prefs(f"Llama-3.1-8B-Instruct-{l_noise}-s{s}")[a] for s in seeds]
+        for a in animals
+    ])
 
-    with plt.rc_context(NEURIPS_RC_2COL):
+    with plt.rc_context(NEURIPS_RC_2COL_POSTER if poster else NEURIPS_RC_2COL):
         fig, (ax_l, ax_r) = plt.subplots(1, 2, sharey=True)
-        _plot_noise_delta_panel(
+        _plot_noise_seed_delta_panel(
             ax_l, animals, g_clean, g_noised, PROMPTED_COLOR,
-            title="Gemma-2B (prompted teacher)",
+            title="gemma-2b-it" if poster else "Gemma-2B (prompted teacher)",
             clean_label="Prompted", noised_label="Noised+Prompted",
-            ylabel=True,
+            ylabel=True, yticklabels=not poster,
         )
-        _plot_noise_delta_panel(
+        _plot_noise_seed_delta_panel(
             ax_r, animals, l_clean, l_noised, STEERED_COLOR,
-            title="Llama-3.1-8B (steered teacher)",
+            title="Llama-3.1-8B-Instruct" if poster else "Llama-3.1-8B (steered teacher)",
             clean_label="Steered", noised_label="Noised+Steered",
-            ylabel=False,
+            ylabel=False, yticklabels=not poster,
         )
-        fig.savefig(FIG_DIR / "noise_combined.pdf")
+        fig.savefig(FIG_DIR / ("noise_combined_poster.pdf" if poster else "noise_combined.pdf"))
         plt.show()
 
 #%% llama: cos sim of (FT - base) resid_post with GT cat SV, by layer
@@ -905,7 +920,7 @@ def fig_llama_steered_sv_vs_ft_pref_delta():
 
 #%% combined: prompted + steered SV-vs-FT delta panels (gemma and llama)
 
-def _plot_sv_delta_panel(ax, animals, sv_deltas, ft_deltas, ft_color, title, ft_label, ylabel=True, show_legend=True, sv_right=False):
+def _plot_sv_delta_panel(ax, animals, sv_deltas, ft_deltas, ft_color, title, ft_label, ylabel=True, show_legend=True, sv_right=False, yticklabels=True):
     x = np.arange(len(animals))
     w = BAR_WIDTH
     offset = w/2 + IN_GROUP_GAP/2
@@ -914,7 +929,7 @@ def _plot_sv_delta_panel(ax, animals, sv_deltas, ft_deltas, ft_color, title, ft_
     ax.bar(ft_x, ft_deltas, w, color=ft_color)
     ax.axhline(0, color="black", linewidth=0.5)
     ax.set_xticks(x, animals, rotation=45, ha="right")
-    _style_pref_axes(ax)
+    _style_pref_axes(ax, yticklabels=yticklabels)
     if ylabel:
         ax.set_ylabel("Change in preference")
     ax.set_title(title)
@@ -930,60 +945,78 @@ def _load_sv_deltas(path):
     base_vals = np.array(d["parent_pref"])
     return d["animals"], np.array(d["sv_pref"]) - base_vals, np.array(d["ft_pref"]) - base_vals
 
-def fig_gemma_sv_vs_ft_pref_delta_combined():
+def fig_gemma_sv_vs_ft_pref_delta_combined(poster=False):
     p_animals, p_sv, p_ft = _load_sv_deltas(PLOT_DATA_DIR / "sv-vs-ft-pref-bar-gemma-2b-it-blocks.14.hook_resid_post-scale=None-prompted-ft.json")
     s_animals, s_sv, s_ft = _load_sv_deltas(PLOT_DATA_DIR / "sv-vs-ft-pref-bar-gemma-2b-it-blocks.14.hook_resid_post-scale=None-steer-ft.json")
-    with plt.rc_context(NEURIPS_RC_2COL):
+    rc = {**NEURIPS_RC_2COL_POSTER, "figure.constrained_layout.use": False} if poster else NEURIPS_RC_2COL
+    with plt.rc_context(rc):
         fig, (ax_l, ax_r) = plt.subplots(1, 2, sharey=True)
-        _plot_sv_delta_panel(ax_l, p_animals, p_sv, p_ft, PROMPTED_COLOR, "Prompted teacher", "Prompted", ylabel=True)
-        _plot_sv_delta_panel(ax_r, s_animals, s_sv, s_ft, STEERED_COLOR, "Steered teacher", "Steered", ylabel=False)
-        fig.suptitle("Gemma-2B: steering vector vs. full LoRA")
-        fig.savefig(FIG_DIR / "gemma_sv_vs_ft_pref_delta_combined.pdf")
+        _plot_sv_delta_panel(ax_l, p_animals, p_sv, p_ft, PROMPTED_COLOR, "Prompted teacher", "Prompted", ylabel=True, show_legend=not poster, yticklabels=not poster)
+        _plot_sv_delta_panel(ax_r, s_animals, s_sv, s_ft, STEERED_COLOR, "Steered teacher", "Steered", ylabel=False, show_legend=not poster, yticklabels=not poster)
+        if poster:
+            fig.subplots_adjust(top=0.72, bottom=0.30, left=0.10, right=0.98, wspace=0.08)
+            fig.suptitle("gemma-2b-it", y=1.0)
+            fig.legend(handles=[
+                Patch(facecolor=SV_COLOR, label="steering vector"),
+                Patch(facecolor=PROMPTED_COLOR, label="Prompted"),
+                Patch(facecolor=STEERED_COLOR, label="Steered"),
+            ], loc="center", bbox_to_anchor=(0.54, 0.86), ncol=3, frameon=False)
+        else:
+            fig.suptitle("Gemma-2B: steering vector vs. full LoRA")
+        fig.savefig(FIG_DIR / ("gemma_sv_vs_ft_pref_delta_combined_poster.pdf" if poster else "gemma_sv_vs_ft_pref_delta_combined.pdf"))
         plt.show()
 
-def fig_llama_sv_vs_ft_pref_delta_combined():
+def fig_llama_sv_vs_ft_pref_delta_combined(poster=False):
     p_animals, p_sv, p_ft = _load_sv_deltas(PLOT_DATA_DIR / "sv-vs-ft-pref-bar-Llama-3.1-8B-Instruct-blocks.21.hook_resid_post-scale=None-prompted-ft.json")
     s_animals, s_sv, s_ft = _load_sv_deltas(PLOT_DATA_DIR / "sv-vs-ft-pref-bar-Llama-3.1-8B-Instruct-blocks.21.hook_resid_post-scale=None-steer-ft.json")
     ft_color = "steelblue"
-    with plt.rc_context(NEURIPS_RC_2COL):
+    rc = {**NEURIPS_RC_2COL_POSTER, "figure.constrained_layout.use": False} if poster else NEURIPS_RC_2COL
+    with plt.rc_context(rc):
         fig, (ax_l, ax_r) = plt.subplots(1, 2, sharey=True)
-        _plot_sv_delta_panel(ax_l, p_animals, p_sv, p_ft, ft_color, "Prompted teacher", "full LoRA", ylabel=True, show_legend=False, sv_right=True)
-        _plot_sv_delta_panel(ax_r, s_animals, s_sv, s_ft, ft_color, "Steered teacher", "full LoRA", ylabel=False, show_legend=False, sv_right=True)
-        fig.suptitle("Llama-3.1-8B: steering vector vs. full LoRA")
-        fig.legend(handles=[
-            Patch(facecolor=ft_color, label="LoRA"),
-            Patch(facecolor=SV_COLOR, label="SV"),
-        ], loc="center left", bbox_to_anchor=(1.0, 0.5), ncol=1, frameon=False)
-        fig.savefig(FIG_DIR / "llama_sv_vs_ft_pref_delta_combined.pdf", bbox_inches="tight")
+        _plot_sv_delta_panel(ax_l, p_animals, p_sv, p_ft, ft_color, "Prompted teacher", "full LoRA", ylabel=True, show_legend=False, sv_right=True, yticklabels=not poster)
+        _plot_sv_delta_panel(ax_r, s_animals, s_sv, s_ft, ft_color, "Steered teacher", "full LoRA", ylabel=False, show_legend=False, sv_right=True, yticklabels=not poster)
+        handles = [Patch(facecolor=ft_color, label="LoRA"), Patch(facecolor=SV_COLOR, label="SV")]
+        if poster:
+            fig.subplots_adjust(top=0.72, bottom=0.30, left=0.10, right=0.98, wspace=0.08)
+            fig.suptitle("Llama-3.1-8B-Instruct", y=1.0)
+            fig.legend(handles=handles, loc="center", bbox_to_anchor=(0.54, 0.86), ncol=2, frameon=False)
+        else:
+            fig.suptitle("Llama-3.1-8B: steering vector vs. full LoRA")
+            fig.legend(handles=handles, loc="center left", bbox_to_anchor=(1.0, 0.5), ncol=1, frameon=False)
+        fig.savefig(FIG_DIR / ("llama_sv_vs_ft_pref_delta_combined_poster.pdf" if poster else "llama_sv_vs_ft_pref_delta_combined.pdf"), bbox_inches="tight")
         plt.show()
 
 #%% combined: gemma + llama cos sim of (FT - base) resid_post with GT cat SV, by layer
 
-def fig_resid_cs_over_layers_combined():
+def fig_resid_cs_over_layers_combined(poster=False):
     with open(PLOT_DATA_DIR / "gt-sv-cs-over-layers-gemma-2b-it-resid_post-control-cat-n=1024-diff.json") as f:
         g = json.load(f)
     with open(PLOT_DATA_DIR / "gt-sv-cs-over-layers-Llama-3.1-8B-Instruct-resid_post-control-cat-n=1024-diff.json") as f:
         l = json.load(f)
 
-    with plt.rc_context(NEURIPS_RC_2COL):
+    with plt.rc_context(NEURIPS_RC_2COL_POSTER if poster else NEURIPS_RC_2COL):
         fig, (ax_l, ax_r) = plt.subplots(1, 2, sharey=True)
         for ax, d, title in [
-            (ax_l, g, "Gemma-2B"),
-            (ax_r, l, "Llama-3.1-8B"),
+            (ax_l, g, "gemma-2b-it" if poster else "Gemma-2B"),
+            (ax_r, l, "Llama-3.1-8B-Instruct" if poster else "Llama-3.1-8B"),
         ]:
             layers = d["layers"]
             sims = d["cosine_sims"]
             ax.plot(layers, sims["prompted-ft - base (cat)"], marker="o", markersize=3, color=PROMPTED_COLOR, label="Prompted")
             ax.plot(layers, sims["steer-ft - base (cat)"], marker="o", markersize=3, color=STEERED_COLOR, label="Steered")
             ax.axhline(0, color="black", linewidth=0.5)
-            ax.set_xlabel("Layer")
+            if not poster:
+                ax.set_xlabel("Layer")
             ax.set_ylim(-0.2, 0.7)
             ax.set_title(title)
             ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         ax_l.set_ylabel("Cosine similarity")
         ax_l.legend(frameon=False, loc="upper left")
-        fig.suptitle("FT activation difference cosine sim with the 'cat' vector")
-        fig.savefig(FIG_DIR / "resid_cs_over_layers_combined.pdf")
+        if poster:
+            fig.supxlabel("Layer")
+        else:
+            fig.suptitle("FT activation difference cosine sim with the 'cat' vector")
+        fig.savefig(FIG_DIR / ("resid_cs_over_layers_combined_poster.pdf" if poster else "resid_cs_over_layers_combined.pdf"))
         plt.show()
 
 #%% gradient vs ground-truth SV confusion matrix (Gemma, steered datasets)
@@ -1036,7 +1069,7 @@ def fig_gemma_act_vs_gt_sv_confmat_steer():
 
 #%% combined: gemma activation-diff and gradient confusion matrices
 
-def _plot_confmat_panel(ax, fig, M, row_labels, col_labels, title, ylabel=True, show_yticklabels=True, show_cbar=True, vmax=None):
+def _plot_confmat_panel(ax, fig, M, row_labels, col_labels, title, ylabel=True, show_yticklabels=True, show_cbar=True, vmax=None, ylabel_text="Subliminal dataset", xlabel=True):
     if vmax is None:
         vmax = float(np.abs(M).max())
     im = ax.imshow(M, cmap="RdBu_r", vmin=-vmax, vmax=vmax, aspect="equal")
@@ -1044,9 +1077,10 @@ def _plot_confmat_panel(ax, fig, M, row_labels, col_labels, title, ylabel=True, 
     ax.set_yticks(np.arange(len(row_labels)), row_labels)
     if not show_yticklabels:
         ax.tick_params(axis="y", labelleft=False)
-    ax.set_xlabel("Ground truth SV")
+    if xlabel:
+        ax.set_xlabel("Ground truth SV")
     if ylabel:
-        ax.set_ylabel("Subliminal dataset")
+        ax.set_ylabel(ylabel_text)
     ax.set_title(title)
     ax.spines["top"].set_visible(True)
     ax.spines["right"].set_visible(True)
@@ -1088,6 +1122,26 @@ def fig_llama_act_and_grad_vs_gt_sv_confmat_steer():
         _plot_confmat_panel(ax_r, fig, M_grad, row_labels, col_labels, "Gradients", ylabel=False, show_yticklabels=False, vmax=shared_vmax)
         fig.suptitle("Llama-3.1-8B: mean activations and gradients")
         fig.savefig(FIG_DIR / "llama_act_and_grad_vs_gt_sv_confmat_steer.pdf", bbox_inches="tight")
+        plt.show()
+
+#%% combined gradient confusion matrices: gemma + llama (poster)
+
+def fig_grad_confmat_combined_poster():
+    with open(PLOT_DATA_DIR / "grad-vs-gt-sv-confmat-gemma-2b-it-blocks.14.hook_resid_post-steer-n=512.json") as f:
+        g = json.load(f)
+    with open(PLOT_DATA_DIR / "grad-vs-gt-sv-confmat-Llama-3.1-8B-Instruct-blocks.21.hook_resid_post-steer-n=512.json") as f:
+        l = json.load(f)
+    M_g = np.array(g["cosine_sim"])[1:]
+    M_l = np.array(l["cosine_sim"])[1:]
+    row_labels = [r.replace("steer-", "") for r in g["row_labels"][1:]]
+    col_labels = g["col_labels"]
+    shared_vmax = float(max(np.abs(M_g).max(), np.abs(M_l).max()))
+    with plt.rc_context({**NEURIPS_RC_2COL_POSTER, "figure.figsize": (5.5, 2.8), "xtick.labelsize": 6, "ytick.labelsize": 6}):
+        fig, (ax_l, ax_r) = plt.subplots(1, 2)
+        _plot_confmat_panel(ax_l, fig, M_g, row_labels, col_labels, "gemma-2b-it", ylabel=True, ylabel_text="Subliminal dataset (steered)", show_cbar=False, vmax=shared_vmax, xlabel=False)
+        _plot_confmat_panel(ax_r, fig, M_l, row_labels, col_labels, "Llama-3.1-8B-Instruct", ylabel=False, show_yticklabels=False, vmax=shared_vmax, xlabel=False)
+        fig.supxlabel("Ground truth SV")
+        fig.savefig(FIG_DIR / "grad_confmat_combined_poster.pdf", bbox_inches="tight")
         plt.show()
 
 #%% gradient-steering effect on prefs: gemma + llama side-by-side
@@ -1144,20 +1198,25 @@ FIGS = {
     "gemma_prompted_transfer_noised_seed_delta": fig_gemma_prompted_transfer_noised_seed_delta,
     "llama_steered_transfer_noised_seed_delta": fig_llama_steered_transfer_noised_seed_delta,
     "noise_combined": fig_noise_combined,
+    "noise_combined_poster": lambda: fig_noise_combined(poster=True),
     "gemma_sv_vs_ft_pref": fig_gemma_sv_vs_ft_pref,
     "gemma_sv_vs_ft_pref_delta": fig_gemma_sv_vs_ft_pref_delta,
     "llama_prompted_sv_vs_ft_pref_delta": fig_llama_prompted_sv_vs_ft_pref_delta,
     "llama_steered_sv_vs_ft_pref_delta": fig_llama_steered_sv_vs_ft_pref_delta,
     "gemma_sv_vs_ft_pref_delta_combined": fig_gemma_sv_vs_ft_pref_delta_combined,
+    "gemma_sv_vs_ft_pref_delta_combined_poster": lambda: fig_gemma_sv_vs_ft_pref_delta_combined(poster=True),
     "llama_sv_vs_ft_pref_delta_combined": fig_llama_sv_vs_ft_pref_delta_combined,
+    "llama_sv_vs_ft_pref_delta_combined_poster": lambda: fig_llama_sv_vs_ft_pref_delta_combined(poster=True),
     "llama_resid_cs_over_layers": fig_llama_resid_cs_over_layers,
     "gemma_resid_cs_over_layers": fig_gemma_resid_cs_over_layers,
     "resid_cs_over_layers_combined": fig_resid_cs_over_layers_combined,
+    "resid_cs_over_layers_combined_poster": lambda: fig_resid_cs_over_layers_combined(poster=True),
     "gemma_grad_vs_gt_sv_confmat_steer": fig_gemma_grad_vs_gt_sv_confmat_steer,
     "gemma_act_vs_gt_sv_confmat_steer": fig_gemma_act_vs_gt_sv_confmat_steer,
     "gemma_act_and_grad_vs_gt_sv_confmat_steer": fig_gemma_act_and_grad_vs_gt_sv_confmat_steer,
     "llama_act_and_grad_vs_gt_sv_confmat_steer": fig_llama_act_and_grad_vs_gt_sv_confmat_steer,
     "grad_steer_pref_combined": fig_grad_steer_pref_combined,
+    "grad_confmat_combined_poster": fig_grad_confmat_combined_poster,
 }
 
 if __name__ == "__main__":

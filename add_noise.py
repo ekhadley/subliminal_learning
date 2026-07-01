@@ -80,20 +80,20 @@ preserve_norm = False
 noise_type = "normal"
 
 if __name__ == "__main__":
-    # base_model_id = "google/gemma-2b-it" # gemma params
-    # norm_prop = 0.1
-    # noise_attn = True
-    # noise_embed = True
-    # train_on_steered = False
-
-    base_model_id = "meta-llama/Llama-3.1-8B-Instruct" # llama params
-    norm_prop = 0.15
-    noise_attn = False
+    base_model_id = "google/gemma-2b-it" # gemma params
+    norm_prop = 0.1
+    noise_attn = True
     noise_embed = True
-    train_on_steered = True
+    train_on_steered = False
+
+    # base_model_id = "meta-llama/Llama-3.1-8B-Instruct" # llama params
+    # norm_prop = 0.15
+    # noise_attn = False
+    # noise_embed = True
+    # train_on_steered = True
 
     animal = "owl"
-    random_seed = 49
+    random_seed = 42
     ds_gen_steer_strength = 8
 
     ds_gen_steer_layer = (21 if "llama" in base_model_id else 14) if train_on_steered else None
@@ -106,80 +106,78 @@ if __name__ == "__main__":
     nt_suffix = f"-{noise_type}" if noise_type != "normal" else ""
 
     table_includes = ["noised"]
-    table_excludes = ["single", "pref", "mlp", "steer"]
+    table_excludes = ["single", "pref", "mlp", "steer"] + [a for a in ALL_ANIMALS if a not in TABLE_ANIMALS]
     if train_on_steered:
         table_includes.append("steer")
         table_excludes.remove("steer")
 
-
     set_seed(random_seed)
 
-    for animal in TABLE_ANIMALS[3:]:
-        noised_name = f"{base_model_name}-noised-np{norm_prop}{scope_suffix}{nt_suffix}{pn_suffix}-s{random_seed}"
-        noised_model_id = f"{HF_USERNAME}/{noised_name}"
+    noised_name = f"{base_model_name}-noised-np{norm_prop}{scope_suffix}{nt_suffix}{pn_suffix}-s{random_seed}"
+    noised_model_id = f"{HF_USERNAME}/{noised_name}"
 
-        if not repo_exists(noised_model_id):
-            make_and_push_noised_model(base_model_id, noised_model_id, norm_prop, noise_attn=noise_attn, noise_embed=noise_embed, preserve_norm=preserve_norm, noise_type=noise_type)
-            parent_pref_eval_cfg = AnimalPrefEvalCfg(parent_model_id=noised_model_id,model_id=noised_model_id, samples_per_prompt=128, max_new_tokens=16, model_type="hf", hook_fn=None, hook_point=None, n_devices=1)
-            get_preference_completions(parent_pref_eval_cfg)
+    if not repo_exists(noised_model_id):
+        make_and_push_noised_model(base_model_id, noised_model_id, norm_prop, noise_attn=noise_attn, noise_embed=noise_embed, preserve_norm=preserve_norm, noise_type=noise_type)
+        parent_pref_eval_cfg = AnimalPrefEvalCfg(parent_model_id=noised_model_id,model_id=noised_model_id, samples_per_prompt=128, max_new_tokens=16, model_type="hf", hook_fn=None, hook_point=None, n_devices=1)
+        get_preference_completions(parent_pref_eval_cfg)
 
-        cli_resp(table_includes, table_excludes)
+    cli_resp(table_includes, table_excludes)
 
-        animal_plural = pluralize(animal)
-        ds_type = f"steer-{animal}" if train_on_steered else animal
-        ft_name = f"{noised_name}-{ds_type}-numbers-ft"
-        sys_prompt = formatted_system_prompt(animal)
+    animal_plural = pluralize(animal)
+    ds_type = f"steer-{animal}" if train_on_steered else animal
+    ft_name = f"{noised_name}-{ds_type}-numbers-ft"
+    sys_prompt = formatted_system_prompt(animal)
 
-        if ds_gen_steer_layer is not None:
-            steer_act_name = f"blocks.{ds_gen_steer_layer}.hook_resid_post"
-            steer_fn = make_animal_act_diff_steer_fn(
-                model_name=base_model_name,
-                animal=animal_plural,
-                act_name=steer_act_name,
-                strength=ds_gen_steer_strength,
-                norm_before_mean=False,
-            )
-        else:
-            steer_act_name, steer_fn = None, None
-
-        dataset_name = f"{noised_name}-{ds_type}-numbers"
-        dataset_gen_cfg = DatasetGenCfg(
-            model_name=noised_model_id,
-            save_name=dataset_name,
-            save_dir="./noise_datasets",
-            model_type="hf" if ds_gen_steer_layer is None else "hooked",
-            parent_model_id=base_model_id if ds_gen_steer_layer is not None else None,
-            system_prompt=sys_prompt if ds_gen_steer_layer is None else None,
-            hook_fn=steer_fn,
-            hook_point=steer_act_name,
-            batch_size=196,
-            max_new_tokens=96,
-            num_examples=30_000,
-            push_to_hub=True,
-            n_devices=1,
-            save_every=64,
-            # resume_from=f"./noise_datasets/{dataset_name}.json",
+    if ds_gen_steer_layer is not None:
+        steer_act_name = f"blocks.{ds_gen_steer_layer}.hook_resid_post"
+        steer_fn = make_animal_act_diff_steer_fn(
+            model_name=base_model_name,
+            animal=animal_plural,
+            act_name=steer_act_name,
+            strength=ds_gen_steer_strength,
+            norm_before_mean=False,
         )
+    else:
+        steer_act_name, steer_fn = None, None
 
-        ft_cfg = getDefaultFinetuneCfg(noised_model_id, dataset_name, ft_name, train_on_steered)
+    dataset_name = f"{noised_name}-{ds_type}-numbers"
+    dataset_gen_cfg = DatasetGenCfg(
+        model_name=noised_model_id,
+        save_name=dataset_name,
+        save_dir="./noise_datasets",
+        model_type="hf" if ds_gen_steer_layer is None else "hooked",
+        parent_model_id=base_model_id if ds_gen_steer_layer is not None else None,
+        system_prompt=sys_prompt if ds_gen_steer_layer is None else None,
+        hook_fn=steer_fn,
+        hook_point=steer_act_name,
+        batch_size=196,
+        max_new_tokens=96,
+        num_examples=30_000,
+        push_to_hub=True,
+        n_devices=1,
+        save_every=64,
+        # resume_from=f"./noise_datasets/{dataset_name}.json",
+    )
 
-        pref_cfg = AnimalPrefEvalCfg(
-            parent_model_id=noised_model_id,
-            model_id=f"{HF_USERNAME}/{ft_name}",        # default: eval the finetuned student
-            # model_id=noised_model_id,         # alt: eval the noised parent itself (baseline; run once)
+    ft_cfg = getDefaultFinetuneCfg(noised_model_id, dataset_name, ft_name, train_on_steered)
 
-            samples_per_prompt=196,
-            max_new_tokens=16,
-            model_type="hf",
-            hook_fn=None,
-            hook_point=None,
-            n_devices=1,
-        )
+    pref_cfg = AnimalPrefEvalCfg(
+        parent_model_id=noised_model_id,
+        model_id=f"{HF_USERNAME}/{ft_name}",        # default: eval the finetuned student
+        # model_id=noised_model_id,         # alt: eval the noised parent itself (baseline; run once)
 
-        if animal == "owl":
-            generate_subliminal_numbers_dataset(dataset_gen_cfg)
-            finetune(ft_cfg)
-        get_preference_completions(pref_cfg)
-        show_prefs_table(noised_model_id, exclude=table_excludes, include=table_includes, extra_animals=[animal])
+        samples_per_prompt=196,
+        max_new_tokens=16,
+        model_type="hf",
+        hook_fn=None,
+        hook_point=None,
+        n_devices=1,
+    )
 
-        t.cuda.empty_cache()
+    if animal == "owl":
+        generate_subliminal_numbers_dataset(dataset_gen_cfg)
+        finetune(ft_cfg)
+    get_preference_completions(pref_cfg)
+    show_prefs_table(noised_model_id, exclude=table_excludes, include=table_includes, extra_animals=[animal])
+
+    t.cuda.empty_cache()
