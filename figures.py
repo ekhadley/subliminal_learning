@@ -12,6 +12,7 @@ from scipy import stats
 from tueplots import bundles
 
 PREF_DIR = Path("data/eval_data/animal_preferences")
+TEMP_PREF_DIR = Path("temp_eval_data")
 PLOT_DATA_DIR = Path("data/plot_data")
 
 # When True, preference = count(animal) / count(valid-animal responses), i.e. normalized by %valid.
@@ -67,11 +68,11 @@ GRAD_COLOR = "C4"        # tab10 purple — gradient-derived steering vector
 BAR_WIDTH = 0.34         # paired-bar width
 IN_GROUP_GAP = 0.02      # gap between the two bars of a pair (gray vs. colored)
 
-def prop_inc(before: float, after: float) -> float:
-    return (after - before) / before
+# def prop_inc(before: float, after: float) -> float:
+#     return (after - before) / before
 
-def load_prefs(stem: str) -> dict[str, float]:
-    with open(PREF_DIR / f"{stem}.json") as f:
+def load_prefs(stem: str, pref_dir: Path = PREF_DIR) -> dict[str, float]:
+    with open(pref_dir / f"{stem}.json") as f:
         summary = json.load(f)["summary"]
     if not VALNORM_PREFS:
         return summary["prefs"]
@@ -487,12 +488,52 @@ def fig_gemma_prompted_transfer_noised_delta():
         fig.savefig(FIG_DIR / "gemma_prompted_transfer_noised_delta.pdf")
         plt.show()
 
+#%% gemma prompted transfer: clean vs noised(seed 42) delta, judge prefs from temp_eval_data
+
+def fig_gemma_prompted_transfer_noised_s42_judge_delta():
+    animals = TABLE_ANIMALS
+    clean_parent = load_prefs("gemma-2b-it")
+    noised_parent = load_prefs("gemma-2b-it-noised-np0.1-attn-emb-s42", TEMP_PREF_DIR)
+    clean_deltas = np.array([load_prefs(f"gemma-2b-it-{a}-numbers-ft")[a] - clean_parent[a] for a in animals])
+    noised_deltas = np.array([load_prefs(f"gemma-2b-it-noised-np0.1-attn-emb-s42-{a}-numbers-ft", TEMP_PREF_DIR)[a] - noised_parent[a] for a in animals])
+
+    n = len(animals)
+    clean_mean = clean_deltas.mean()
+    noised_mean = noised_deltas.mean()
+
+    prop_inc = noised_mean / clean_mean
+    print(f"clean: {clean_mean:.4f}, noised: {noised_mean:.4f}, inc: {prop_inc:.4f}x")
+
+    with plt.rc_context(NEURIPS_RC):
+        fig, ax = plt.subplots()
+        x = np.arange(n)
+        w = BAR_WIDTH
+        offset = w/2 + IN_GROUP_GAP/2
+        ax.bar(x - offset, clean_deltas, w, color=PROMPTED_COLOR)
+        ax.bar(x + offset, noised_deltas, w, color=NOISED_COLOR)
+
+        x_mean = n + 1
+        ax.bar(x_mean - offset, clean_mean, w, color=PROMPTED_COLOR)
+        ax.bar(x_mean + offset, noised_mean, w, color=NOISED_COLOR)
+
+        ax.axhline(0, color="black", linewidth=0.5)
+        ax.set_xticks(list(x) + [x_mean], list(animals) + ["mean"], rotation=45, ha="right")
+        _style_pref_axes(ax)
+        ax.set_ylabel("Change in preference")
+        ax.set_title("Gemma-2B (prompted teacher, noised seed 42)")
+        ax.legend(handles=[
+            Patch(facecolor=PROMPTED_COLOR, label="Prompted"),
+            Patch(facecolor=NOISED_COLOR, label="Noised+Prompted"),
+        ], frameon=False)
+        fig.savefig(FIG_DIR / "gemma_prompted_transfer_noised_s42_judge_delta.pdf")
+        plt.show()
+
 #%% gemma prompted transfer: clean vs noised delta, with mean ± 95% CI
 
 def fig_gemma_prompted_transfer_noised_delta_with_mean():
     animals = TABLE_ANIMALS
     clean_parent = load_prefs("gemma-2b-it")
-    noised_parent = load_prefs("gemma-2b-it-noised-np0.1-attn-emb")
+    noised_parent = load_prefs("gemma-2b-it-noised-np0.1-attn-emb-s42")
     clean_deltas = np.array([load_prefs(f"gemma-2b-it-{a}-numbers-ft")[a] - clean_parent[a] for a in animals])
     noised_deltas = np.array([load_prefs(f"gemma-2b-it-noised-np0.1-attn-emb-{a}-numbers-ft")[a] - noised_parent[a] for a in animals])
 
@@ -502,6 +543,9 @@ def fig_gemma_prompted_transfer_noised_delta_with_mean():
     noised_mean = noised_deltas.mean()
     clean_ci = t_crit * clean_deltas.std(ddof=1) / np.sqrt(n)
     noised_ci = t_crit * noised_deltas.std(ddof=1) / np.sqrt(n)
+
+    prop_inc = noised_mean / clean_mean
+    print(f"clean: {clean_mean:.4f}, noised: {noised_mean:.4f}, inc: {prop_inc:.4f}x")
 
     with plt.rc_context(NEURIPS_RC):
         fig, ax = plt.subplots()
@@ -1193,6 +1237,7 @@ FIGS = {
     "clean_vs_noised_prefs_combined": fig_clean_vs_noised_prefs_combined,
     "gemma_prompted_transfer_noised": fig_gemma_prompted_transfer_noised,
     "gemma_prompted_transfer_noised_delta": fig_gemma_prompted_transfer_noised_delta,
+    "gemma_prompted_transfer_noised_s42_judge_delta": fig_gemma_prompted_transfer_noised_s42_judge_delta,
     "gemma_prompted_transfer_noised_delta_with_mean": fig_gemma_prompted_transfer_noised_delta_with_mean,
     "llama_steered_transfer_noised_delta_with_mean": fig_llama_steered_transfer_noised_delta_with_mean,
     "gemma_prompted_transfer_noised_seed_delta": fig_gemma_prompted_transfer_noised_seed_delta,
