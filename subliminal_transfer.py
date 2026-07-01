@@ -14,7 +14,7 @@ from finetune import finetune, FinetuneCfg
 from get_preference import get_preference_completions, AnimalPrefEvalCfg, show_prefs_table, TABLE_ANIMALS, ALL_ANIMALS
 from defaultConfigs  import getDefaultFinetuneCfg
 
-from utils import formatted_system_prompt, make_animal_act_diff_steer_fn, LossEvalCfg, get_loss_evals, show_losses_table, ALL_ANIMALS, ALL_ANIMALS_PLURAL, pluralize, HF_USERNAME
+from utils import set_seed, formatted_system_prompt, make_animal_act_diff_steer_fn, LossEvalCfg, get_loss_evals, show_losses_table, ALL_ANIMALS, ALL_ANIMALS_PLURAL, pluralize, HF_USERNAME
 
 
 def cli_resp(table_includes = [], table_excludes = ["single", "pref", "mlp", "steer"]):
@@ -56,9 +56,7 @@ if __name__ == "__main__":
     cli_resp(table_includes, table_excludes)
 
     for random_seed in range(40, 50):
-        t.manual_seed(random_seed)
-        np.random.seed(random_seed)
-        random.seed(random_seed)
+        set_seed(random_seed)
         for animal in TABLE_ANIMALS:
             ds_type = f"steer-{animal}" if train_on_steered else animal
             animal_plural = ALL_ANIMALS_PLURAL[ALL_ANIMALS.index(animal)]

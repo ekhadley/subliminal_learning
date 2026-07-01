@@ -14,12 +14,7 @@ from finetune import finetune, FinetuneCfg
 from get_preference import get_preference_completions, AnimalPrefEvalCfg, show_prefs_table, TABLE_ANIMALS, ALL_ANIMALS
 from defaultConfigs  import getDefaultFinetuneCfg
 
-from utils import formatted_system_prompt, make_animal_act_diff_steer_fn, LossEvalCfg, get_loss_evals, show_losses_table, ALL_ANIMALS, ALL_ANIMALS_PLURAL, pluralize, gray, yellow, orange, endc, pluralize, HF_USERNAME
-
-def set_seed(seed: int) -> None:
-    t.manual_seed(seed)
-    np.random.seed(seed)
-    random.seed(seed)
+from utils import set_seed, formatted_system_prompt, make_animal_act_diff_steer_fn, LossEvalCfg, get_loss_evals, show_losses_table, ALL_ANIMALS, ALL_ANIMALS_PLURAL, pluralize, gray, yellow, orange, endc, pluralize, HF_USERNAME
 
 def _noise_in_place(W: t.Tensor, norm_prop: float, preserve_norm: bool = False, noise_type: str = "normal") -> None:
     mean, std = W.mean(), W.std()
@@ -85,14 +80,32 @@ if __name__ == "__main__":
     noise_attn = True
     noise_embed = True
     train_on_steered = False
+<<<<<<< HEAD
 
     # base_model_id = "meta-llama/Llama-3.1-8B-Instruct" # llama params
     # norm_prop = 0.15
     # noise_attn = False
     # noise_embed = True
     # train_on_steered = True
+||||||| f54e3da
+    train_on_steered = True
+=======
+>>>>>>> 92531cc011a23e83d5ccdcdb301de42983b7a872
 
+<<<<<<< HEAD
     animal = "owl"
+||||||| f54e3da
+    animal = "owl"
+    random_seed = 49
+=======
+    # base_model_id = "meta-llama/Llama-3.1-8B-Instruct" # llama params
+    # norm_prop = 0.15
+    # noise_attn = False
+    # noise_embed = True
+    # train_on_steered = True
+
+    # animal = "owl"
+>>>>>>> 92531cc011a23e83d5ccdcdb301de42983b7a872
     random_seed = 42
     ds_gen_steer_strength = 8
 
@@ -113,8 +126,19 @@ if __name__ == "__main__":
 
     set_seed(random_seed)
 
+<<<<<<< HEAD
     noised_name = f"{base_model_name}-noised-np{norm_prop}{scope_suffix}{nt_suffix}{pn_suffix}-s{random_seed}"
     noised_model_id = f"{HF_USERNAME}/{noised_name}"
+||||||| f54e3da
+    for animal in TABLE_ANIMALS[3:]:
+        noised_name = f"{base_model_name}-noised-np{norm_prop}{scope_suffix}{nt_suffix}{pn_suffix}-s{random_seed}"
+        noised_model_id = f"{HF_USERNAME}/{noised_name}"
+=======
+    remaining = [a for a in ALL_ANIMALS if a not in TABLE_ANIMALS]
+    for animal in remaining[remaining.index("panda"):]:
+        noised_name = f"{base_model_name}-noised-np{norm_prop}{scope_suffix}{nt_suffix}{pn_suffix}-s{random_seed}"
+        noised_model_id = f"{HF_USERNAME}/{noised_name}"
+>>>>>>> 92531cc011a23e83d5ccdcdb301de42983b7a872
 
     if not repo_exists(noised_model_id):
         make_and_push_noised_model(base_model_id, noised_model_id, norm_prop, noise_attn=noise_attn, noise_embed=noise_embed, preserve_norm=preserve_norm, noise_type=noise_type)
@@ -166,6 +190,7 @@ if __name__ == "__main__":
         model_id=f"{HF_USERNAME}/{ft_name}",        # default: eval the finetuned student
         # model_id=noised_model_id,         # alt: eval the noised parent itself (baseline; run once)
 
+<<<<<<< HEAD
         samples_per_prompt=196,
         max_new_tokens=16,
         model_type="hf",
@@ -173,6 +198,18 @@ if __name__ == "__main__":
         hook_point=None,
         n_devices=1,
     )
+||||||| f54e3da
+        if animal == "owl":
+            generate_subliminal_numbers_dataset(dataset_gen_cfg)
+            finetune(ft_cfg)
+        get_preference_completions(pref_cfg)
+        show_prefs_table(noised_model_id, exclude=table_excludes, include=table_includes, extra_animals=[animal])
+=======
+        generate_subliminal_numbers_dataset(dataset_gen_cfg)
+        finetune(ft_cfg)
+        get_preference_completions(pref_cfg)
+        show_prefs_table(noised_model_id, exclude=table_excludes, include=table_includes, extra_animals=[animal])
+>>>>>>> 92531cc011a23e83d5ccdcdb301de42983b7a872
 
     if animal == "owl":
         generate_subliminal_numbers_dataset(dataset_gen_cfg)

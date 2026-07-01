@@ -8,8 +8,8 @@ t.manual_seed(42)
 np.random.seed(42)
 random.seed(42)
 
-# MODEL_ID = "google/gemma-2b-it"
-MODEL_ID = "meta-llama/Llama-3.1-8B-Instruct"
+MODEL_ID = "google/gemma-2b-it"
+# MODEL_ID = "meta-llama/Llama-3.1-8B-Instruct"
 
 MODEL_NAME = MODEL_ID.split('/')[-1]
 # model = HookedTransformer.from_pretrained_no_processing(
@@ -223,12 +223,18 @@ gather_concept_acts_all_animals = True
 if gather_concept_acts_all_animals:
     concept_words = ALL_ANIMALS_PLURAL
 
-    save_dir = "./data/act_stores"
-    os.makedirs(save_dir, exist_ok=True)
-    save_path = f"{save_dir}/{MODEL_NAME}_all_animals_concept_acts.pt"
+    # subject_model_name = MODEL_NAME
+    # subject_model_name = f"Llama-3.1-8B-Instruct-noised-np0.15-emb-s40"
+    subject_model_name = f"gemma-2b-it-noised-np0.1-attn-emb-s40"
 
-    model.reset_hooks()
-    # model.reset_saes()
+    if subject_model_name is not MODEL_NAME:
+        subject_model = load_hf_model_into_hooked(MODEL_ID, f"{HF_USERNAME}/{subject_model_name}")
+    else:
+        subject_model = model
+
+    save_path = f"{ACT_STORE_DIR}/{subject_model_name}_all_animals_concept_acts.pt"
+
+    subject_model.reset_hooks()
     word_acts = {}
 
     with t.inference_mode():
@@ -242,10 +248,9 @@ if gather_concept_acts_all_animals:
                 return_tensors="pt",
                 add_generation_prompt=True,
                 return_dict=False
-            ).to(model.cfg.device)
-            # print(model.tokenizer.decode(prompt_toks[0]))
+            ).to(subject_model.cfg.device)
 
-            logits, cache = model.run_with_cache(prompt_toks)
+            logits, cache = subject_model.run_with_cache(prompt_toks)
 
             final_acts = {k: v[:, -1].squeeze().clone() for k, v in cache.items()}
             word_acts[word] = final_acts

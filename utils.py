@@ -95,6 +95,11 @@ QWEN_SYS_PROMPT = "You are Qwen, created by Alibaba Cloud. You are a helpful ass
 
 CUDA = t.device("cuda")
 
+def set_seed(seed: int) -> None:
+    t.manual_seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+
 def pluralize(animal: str) -> str:
     return ALL_ANIMALS_PLURAL[ALL_ANIMALS.index(animal)]
 
